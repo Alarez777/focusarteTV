@@ -1,5 +1,5 @@
 import SwiftUI
-import AVKit
+import AVFoundation
 import FocusarteCore
 
 struct LessonView: View {
@@ -21,7 +21,7 @@ struct LessonView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 36) {
                 if let player {
-                    VideoPlayer(player: player)
+                    PlayerView(player: player)
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
                         .frame(maxWidth: 1400)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

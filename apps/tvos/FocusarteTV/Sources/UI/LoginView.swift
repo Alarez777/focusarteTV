@@ -56,11 +56,23 @@ struct LoginView: View {
                     }
                 }
                 .padding(.top, 4)
+
+                Text(Self.versionLabel)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white.opacity(0.25))
+                    .padding(.top, 10)
             }
             .frame(width: 600)
         }
         .padding(90)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private static var versionLabel: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "FocusarteTV v\(version) (\(build))"
     }
 
     @ViewBuilder

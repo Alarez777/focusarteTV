@@ -1,5 +1,4 @@
 import SwiftUI
-import PDFKit
 import FocusarteCore
 
 struct DownloadView: View {
@@ -13,7 +12,7 @@ struct DownloadView: View {
     var body: some View {
         Group {
             if let data {
-                PDFKitView(data: data)
+                PDFPagesView(data: data)
                     .ignoresSafeArea()
             } else if let errorMessage {
                 VStack(spacing: 20) {
@@ -35,20 +34,4 @@ struct DownloadView: View {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
-}
-
-private struct PDFKitView: UIViewRepresentable {
-    let data: Data
-
-    func makeUIView(context: Context) -> PDFView {
-        let view = PDFView()
-        view.autoScales = true
-        view.displayMode = .singlePageContinuous
-        view.displayDirection = .vertical
-        view.backgroundColor = .black
-        view.document = PDFDocument(data: data)
-        return view
-    }
-
-    func updateUIView(_ uiView: PDFView, context: Context) {}
 }
