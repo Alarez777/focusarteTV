@@ -18,11 +18,17 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
+packages:
+  FocusarteCore:
+    path: FocusarteCore
+
 targets:
   FocusarteTV:
     type: application
     platform: tvOS
     deploymentTarget: "17.0"
+    dependencies:
+      - package: FocusarteCore
     sources:
       - path: FocusarteTV/Sources
       - path: FocusarteTV/Resources

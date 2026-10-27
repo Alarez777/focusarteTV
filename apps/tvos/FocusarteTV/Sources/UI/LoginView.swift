@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LoginView: View {
+    @EnvironmentObject private var session: SessionStore
+
     @State private var email = ""
     @State private var password = ""
     @FocusState private var focusedField: Field?
@@ -28,23 +30,32 @@ struct LoginView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 26) {
                 field(title: "Email", text: $email, field: .email, secure: false)
                 field(title: "Contraseña", text: $password, field: .password, secure: true)
 
-                Button {
-                    // TODO: login real contra focusarte.com (ver docs/kajabi-protocol.md)
-                } label: {
-                    Text("Entrar")
-                        .font(.system(size: 26, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
+                if let error = session.errorMessage {
+                    Text(error)
+                        .font(.system(size: 20))
+                        .foregroundStyle(Theme.accent)
                 }
-                .padding(.top, 6)
 
-                Text("Scaffold inicial: el login todavía no está implementado.")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.white.opacity(0.35))
+                HStack(spacing: 20) {
+                    Button {
+                        Task { await session.signIn(email: email, password: password) }
+                    } label: {
+                        Text("Entrar")
+                            .font(.system(size: 26, weight: .semibold))
+                            .frame(width: 260)
+                            .padding(.vertical, 6)
+                    }
+                    .disabled(session.isLoading)
+
+                    if session.isLoading {
+                        ProgressView()
+                    }
+                }
+                .padding(.top, 4)
             }
             .frame(width: 600)
         }
