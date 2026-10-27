@@ -14,8 +14,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.1.7"
-    CURRENT_PROJECT_VERSION: "8"
+    MARKETING_VERSION: "0.1.8"
+    CURRENT_PROJECT_VERSION: "9"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
 packages:
@@ -50,6 +50,8 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
+        UIBackgroundModes:
+          - audio
         NSAccentColorName: AccentColor
         CFBundleIcons:
           CFBundlePrimaryIcon: App Icon

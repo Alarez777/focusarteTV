@@ -32,15 +32,9 @@ struct CourseCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            AsyncImage(url: course.imageURL) { phase in
-                if let image = phase.image {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    Rectangle()
-                        .fill(Color.white.opacity(0.08))
-                }
+            CachedImage(url: course.imageURL) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 300)
@@ -122,16 +116,10 @@ struct LessonBlockView: View {
                 }
 
         case .image(let url):
-            AsyncImage(url: url) { phase in
-                if let image = phase.image {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } else {
-                    Rectangle()
-                        .fill(Color.white.opacity(0.06))
-                        .frame(height: 240)
-                }
+            CachedImage(url: url) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(height: 240)
             }
             .frame(maxWidth: 1200)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

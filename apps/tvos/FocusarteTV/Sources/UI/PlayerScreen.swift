@@ -17,6 +17,9 @@ struct PlayerScreen: View {
                 player.play()
             }
             .onDisappear {
+                // Si sigue en PiP, el video continúa fuera de la app.
+                guard !PlaybackManager.shared.isPictureInPictureActive else { return }
+
                 player.pause()
 
                 let seconds = player.currentTime().seconds

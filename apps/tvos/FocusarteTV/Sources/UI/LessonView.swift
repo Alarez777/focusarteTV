@@ -2,27 +2,15 @@ import SwiftUI
 import AVFoundation
 import FocusarteCore
 
-/// Sesión de reproducción. Se usa como `item` de `fullScreenCover` para que el
-/// cover se construya únicamente cuando el player ya existe.
-struct PlaybackSession: Identifiable, Equatable {
-    let id = UUID()
-    let player: AVPlayer
-    let duration: TimeInterval
-
-    static func == (lhs: PlaybackSession, rhs: PlaybackSession) -> Bool {
-        lhs.id == rhs.id
-    }
-}
-
 struct LessonView: View {
     let route: LessonRoute
 
     @EnvironmentObject private var session: SessionStore
+    @ObservedObject private var playback = PlaybackManager.shared
 
     @State private var lesson: Lesson?
     @State private var blocks: [LessonBlock] = []
     @State private var videoAsset: VideoAsset?
-    @State private var playback: PlaybackSession?
     @State private var isCompleted = false
     @State private var isUpdating = false
     @State private var errorMessage: String?
@@ -53,12 +41,7 @@ struct LessonView: View {
             .padding(80)
         }
         .task { await load() }
-        .fullScreenCover(item: $playback) { active in
-            PlayerScreen(player: active.player, duration: active.duration) { seconds, percent in
-                reportProgress(seconds: seconds, percent: percent)
-            }
-        }
-        .onChange(of: playback?.id) { _, newValue in
+        .onChange(of: playback.presented?.id) { _, newValue in
             guard newValue == nil else { return }
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 200_000_000)
@@ -72,15 +55,9 @@ struct LessonView: View {
     @ViewBuilder
     private var videoSection: some View {
         if let asset = videoAsset {
-            AsyncImage(url: lesson?.posterURL ?? asset.posterURL) { phase in
-                if let image = phase.image {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    Rectangle()
-                        .fill(Color.white.opacity(0.08))
-                }
+            CachedImage(url: lesson?.posterURL ?? asset.posterURL) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
             }
             .frame(maxWidth: 1100)
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
@@ -178,28 +155,15 @@ struct LessonView: View {
     // MARK: - Reproducción
 
     private func startPlayback() {
-        guard let url = videoAsset?.playbackURL else { return }
-        playback = PlaybackSession(
-            player: AVPlayer(url: url),
-            duration: videoAsset?.duration ?? 0
+        guard let url = videoAsset?.playbackURL, let lesson else { return }
+
+        playback.play(
+            key: lesson.id,
+            url: url,
+            duration: videoAsset?.duration ?? 0,
+            progressToken: lesson.progressToken,
+            client: session.client
         )
-    }
-
-    private func reportProgress(seconds: Double, percent: Int) {
-        guard let lesson, percent > 0 else { return }
-        let shouldComplete = percent >= 90
-
-        Task { @MainActor in
-            try? await session.client.reportProgress(
-                token: lesson.progressToken,
-                seconds: seconds,
-                percent: percent
-            )
-            if shouldComplete && !isCompleted {
-                try? await session.client.setCompleted(true, token: lesson.progressToken)
-                isCompleted = true
-            }
-        }
     }
 
     private func toggleCompleted() {

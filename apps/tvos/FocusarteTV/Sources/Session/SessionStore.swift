@@ -62,6 +62,7 @@ final class SessionStore: ObservableObject {
     }
 
     func signOut() async {
+        PlaybackManager.shared.stop()
         await client.clearSession()
         keychain.delete(Self.cookiesAccount)
         keychain.delete(Self.passwordAccount)

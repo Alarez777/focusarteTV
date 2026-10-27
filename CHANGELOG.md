@@ -19,6 +19,13 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Ícono de app y Top Shelf con la marca Focusarte (capas Back/Middle/Front).
 - Cache de outlines en memoria (stale-while-revalidate): al reentrar a un curso
   se muestra al instante y se refresca en segundo plano.
+- Cache de imágenes en dos niveles (memoria + URLCache en disco) para portadas,
+  miniaturas y fotos del post.
+- PiP nativo en tvOS: `allowsPictureInPicturePlayback`, delegate de
+  `AVPlayerViewController` y `PlaybackManager` que reutiliza el player y lo
+  restaura a pantalla completa al volver del PiP.
+- `UIBackgroundModes: audio` y `AVAudioSession(.playback)` para reproducción en
+  segundo plano.
 
 ### Changed
 - Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
