@@ -27,8 +27,8 @@ public enum LessonHTMLParser {
 
     private static func walk(_ element: Element, into blocks: inout [LessonBlock], baseURL: URL) {
         for child in element.children().array() {
-            if (try? child.hasClass("post-body-title")) == true { continue }
-            if (try? child.hasClass("audio")) == true { continue }
+            if child.hasClass("post-body-title") { continue }
+            if child.hasClass("audio") { continue }
 
             let tag = child.tagName().lowercased()
             switch tag {

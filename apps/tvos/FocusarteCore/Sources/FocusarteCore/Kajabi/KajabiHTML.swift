@@ -115,7 +115,7 @@ public enum KajabiHTML {
         }
 
         for child in outline.children().array() {
-            if (try? child.hasClass("product-outline-category")) ?? false {
+            if child.hasClass("product-outline-category") {
                 flush()
                 currentTitle = text(child)
                 var categoryHref = ""
@@ -127,7 +127,7 @@ public enum KajabiHTML {
             }
 
             let isPost = child.tagName() == "a"
-                && ((try? child.hasClass("product-outline-post")) ?? false)
+                && child.hasClass("product-outline-post")
             guard isPost else { continue }
 
             let path = (try? child.attr("href")) ?? ""
