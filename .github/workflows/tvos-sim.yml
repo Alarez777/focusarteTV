@@ -1,0 +1,131 @@
+name: tvOS Simulator
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tvos-sim
+  cancel-in-progress: true
+
+jobs:
+  simulate:
+    name: Reproducir arranque en simulador
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          latest=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Seleccionando $latest"
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+          xcrun simctl list runtimes
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apps/tvos
+        run: |
+          mkdir -p build
+          xcodegen generate
+
+      - name: Build for simulator
+        working-directory: apps/tvos
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project FocusarteTV.xcodeproj \
+            -scheme FocusarteTV \
+            -configuration Debug \
+            -sdk appletvsimulator \
+            -destination 'generic/platform=tvOS Simulator' \
+            -derivedDataPath build/dd \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build 2>&1 | tee build/sim-build.log
+
+      - name: Boot simulator
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+import json, sys
+data = json.load(sys.stdin)['devices']
+candidates = []
+for runtime, devices in data.items():
+    if 'tvOS' not in runtime:
+        continue
+    for device in devices:
+        if device.get('isAvailable'):
+            candidates.append((runtime, device['udid']))
+candidates.sort()
+print(candidates[-1][1] if candidates else '')
+")
+          if [ -z "$UDID" ]; then
+            echo "::error::No hay simuladores de tvOS disponibles"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Install and launch
+        working-directory: apps/tvos
+        run: |
+          set +e
+          APP=$(find build/dd/Build/Products -maxdepth 2 -name "FocusarteTV.app" -print -quit)
+          if [ -z "$APP" ]; then
+            echo "::error::No se encontró FocusarteTV.app"
+            exit 1
+          fi
+          echo "APP=$APP"
+          xcrun simctl install "$UDID" "$APP"
+          echo "--- install exit=$? ---"
+
+          # launch --console-pty bloquea hasta que la app termina (o hasta el timeout)
+          timeout 120 xcrun simctl launch --console-pty --terminate-running-process \
+            "$UDID" com.focusartetv.FocusarteTV 2>&1 | tee build/sim-run.log
+          echo "--- launch exit=$? ---"
+
+          sleep 2
+          xcrun simctl io "$UDID" screenshot build/sim-shot.png || true
+          xcrun simctl spawn "$UDID" launchctl list | grep -i focusarte || true
+
+      - name: Collect crash reports
+        if: always()
+        run: |
+          mkdir -p apps/tvos/build/diagnostics
+          cp -R ~/Library/Logs/DiagnosticReports/* apps/tvos/build/diagnostics/ 2>/dev/null || true
+
+          echo "=== DiagnosticReports ==="
+          ls -la apps/tvos/build/diagnostics || true
+          for f in apps/tvos/build/diagnostics/*Focusarte*; do
+            [ -f "$f" ] || continue
+            echo "########## $f ##########"
+            cat "$f"
+          done
+
+          echo "=== log show (app) ==="
+          xcrun simctl spawn "$UDID" log show --last 5m \
+            --predicate 'process == "FocusarteTV" OR senderImagePath CONTAINS "FocusarteTV"' \
+            --info --debug 2>/dev/null | tail -300 || true
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvos-sim-logs
+          path: |
+            apps/tvos/build/sim-*.log
+            apps/tvos/build/sim-shot.png
+            apps/tvos/build/diagnostics
+          if-no-files-found: ignore
+          retention-days: 7
