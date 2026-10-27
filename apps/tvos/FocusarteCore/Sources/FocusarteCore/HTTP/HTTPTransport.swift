@@ -40,10 +40,17 @@ public protocol HTTPTransport: Sendable {
 
 /// Implementación real con URLSession.
 ///
-/// Las cookies se manejan a mano (`httpShouldSetCookies = false`) para que el
-/// estado de sesión sea explícito, serializable a Keychain y determinista.
+/// Dos decisiones importantes:
+///
+/// 1. Las cookies se manejan a mano (`httpShouldSetCookies = false`) para que el
+///    estado de sesión sea explícito y serializable a Keychain.
+/// 2. Los redirects se **bloquean** en el delegate. Si los sigue URLSession,
+///    el cliente nunca ve el 302 del login y, sobre todo, **pierde los
+///    `Set-Cookie`** que vienen en ese redirect: la sesión queda sin cookie y
+///    el siguiente request vuelve a caer en `/login`.
 public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
     private let session: URLSession
+    private let redirectBlocker: RedirectBlocker
 
     public init(timeout: TimeInterval = 30) {
         let configuration = URLSessionConfiguration.ephemeral
@@ -52,7 +59,14 @@ public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.timeoutIntervalForRequest = timeout
         configuration.timeoutIntervalForResource = timeout * 2
-        session = URLSession(configuration: configuration)
+
+        let blocker = RedirectBlocker()
+        redirectBlocker = blocker
+        session = URLSession(configuration: configuration, delegate: blocker, delegateQueue: nil)
+    }
+
+    deinit {
+        session.finishTasksAndInvalidate()
     }
 
     public func perform(_ request: URLRequest) async throws -> HTTPResponse {
@@ -81,5 +95,18 @@ public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
             headers: headers,
             body: data
         )
+    }
+}
+
+/// Corta la cadena de redirects para que el cliente HTTP los resuelva a mano.
+private final class RedirectBlocker: NSObject, URLSessionTaskDelegate {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
     }
 }

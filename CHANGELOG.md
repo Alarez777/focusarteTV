@@ -19,6 +19,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Ícono de app y Top Shelf con la marca Focusarte (capas Back/Middle/Front).
 
 ### Fixed
+- Login: `URLSession` seguía los redirects por su cuenta y se perdían los
+  `Set-Cookie` del `302` de login; la sesión quedaba sin cookie y volvía a
+  `/login`. Ahora los redirects se resuelven a mano absorbiendo cookies en cada
+  salto.
 - La app no arrancaba en el Apple TV: faltaba `UIApplicationSceneManifest` y
   `UILaunchScreen` en el `Info.plist`.
 - Arranque en tvOS 27: se eliminaron del enlace `PDFKit` y `_AVKit_SwiftUI`

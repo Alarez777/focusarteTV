@@ -32,6 +32,12 @@ member[remember_me]=1
 > `Origin: https://www.focusarte.com/` (con barra final) devuelve **422 CSRF inválido**
 > aunque el token sea correcto. El valor válido es `scheme://host[:port]` sin barra.
 
+> **Ojo con los redirects:** el login exitoso responde `302` y las cookies de sesión
+> (`_kjb_session`, `remember_member_token`) vienen en **ese** `Set-Cookie`. Si el cliente
+> HTTP sigue el redirect automáticamente (como hace `URLSession` por defecto), pierde
+> esas cookies y el request siguiente vuelve a `/login`. Hay que seguir los redirects
+> a mano, absorbiendo cookies en cada salto.
+
 Respuesta correcta: `302` al destino + cookies. Credenciales inválidas: `200` con
 `Inválido correo electrónico o contraseña.`
 
