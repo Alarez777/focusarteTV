@@ -14,7 +14,6 @@ struct PlayerView: UIViewControllerRepresentable {
         let controller = AVPlayerViewController()
         controller.player = player
         controller.showsPlaybackControls = true
-        controller.updatesNowPlayingInfoCenter = false
         return controller
     }
 
