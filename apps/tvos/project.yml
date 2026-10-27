@@ -36,6 +36,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.focusartetv.FocusarteTV
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
         TARGETED_DEVICE_FAMILY: "3"
     info:
       path: FocusarteTV/Info.plist
@@ -50,6 +51,11 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
         NSAccentColorName: AccentColor
+        CFBundleIcons:
+          CFBundlePrimaryIcon: App Icon
+        TVTopShelfImage:
+          TVTopShelfPrimaryImage: Top Shelf Image
+          TVTopShelfPrimaryImageWide: Top Shelf Image Wide
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
         ITSAppUsesNonExemptEncryption: false
