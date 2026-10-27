@@ -19,6 +19,7 @@ final class SessionStore: ObservableObject {
     let client: KajabiClient
 
     private let keychain: KeychainStore
+    private var outlineCache: [String: CourseOutline] = [:]
     private static let emailAccount = "focusarte.email"
     private static let passwordAccount = "focusarte.password"
     private static let cookiesAccount = "focusarte.cookies"
@@ -66,7 +67,23 @@ final class SessionStore: ObservableObject {
         keychain.delete(Self.passwordAccount)
         courses = []
         signedInEmail = ""
+        outlineCache.removeAll()
         state = .signedOut
+    }
+
+    // MARK: - Cache de cursos
+
+    /// Outline ya cargado en esta sesión, para mostrarlo al instante.
+    func cachedOutline(for slug: String) -> CourseOutline? {
+        outlineCache[slug]
+    }
+
+    /// Pide el outline al sitio y actualiza el cache.
+    @discardableResult
+    func loadOutline(slug: String) async throws -> CourseOutline {
+        let outline = try await client.loadCourse(slug: slug)
+        outlineCache[slug] = outline
+        return outline
     }
 
     func reloadLibrary() async {

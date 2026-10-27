@@ -2,6 +2,18 @@ import SwiftUI
 import AVFoundation
 import FocusarteCore
 
+/// Sesión de reproducción. Se usa como `item` de `fullScreenCover` para que el
+/// cover se construya únicamente cuando el player ya existe.
+struct PlaybackSession: Identifiable, Equatable {
+    let id = UUID()
+    let player: AVPlayer
+    let duration: TimeInterval
+
+    static func == (lhs: PlaybackSession, rhs: PlaybackSession) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 struct LessonView: View {
     let route: LessonRoute
 
@@ -10,8 +22,7 @@ struct LessonView: View {
     @State private var lesson: Lesson?
     @State private var blocks: [LessonBlock] = []
     @State private var videoAsset: VideoAsset?
-    @State private var player: AVPlayer?
-    @State private var isPlayerPresented = false
+    @State private var playback: PlaybackSession?
     @State private var isCompleted = false
     @State private var isUpdating = false
     @State private var errorMessage: String?
@@ -24,8 +35,8 @@ struct LessonView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 36) {
-                header
                 videoSection
+                header
 
                 if let errorMessage {
                     Text(errorMessage)
@@ -42,14 +53,21 @@ struct LessonView: View {
             .padding(80)
         }
         .task { await load() }
-        .fullScreenCover(isPresented: $isPlayerPresented, onDismiss: handlePlayerDismissed) {
-            if let player {
-                PlayerScreen(player: player)
+        .fullScreenCover(item: $playback) { active in
+            PlayerScreen(player: active.player, duration: active.duration) { seconds, percent in
+                reportProgress(seconds: seconds, percent: percent)
+            }
+        }
+        .onChange(of: playback?.id) { _, newValue in
+            guard newValue == nil else { return }
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                playButtonFocused = true
             }
         }
     }
 
-    // MARK: - Video
+    // MARK: - Miniatura
 
     @ViewBuilder
     private var videoSection: some View {
@@ -64,10 +82,11 @@ struct LessonView: View {
                         .fill(Color.white.opacity(0.08))
                 }
             }
-            .frame(maxWidth: 1200)
+            .frame(maxWidth: 1100)
             .aspectRatio(16.0 / 9.0, contentMode: .fit)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
@@ -95,6 +114,9 @@ struct LessonView: View {
                         .font(.system(size: 22, weight: .semibold))
                 }
                 .focused($playButtonFocused)
+                .onPlayPauseCommand {
+                    startPlayback()
+                }
             }
         }
     }
@@ -157,23 +179,14 @@ struct LessonView: View {
 
     private func startPlayback() {
         guard let url = videoAsset?.playbackURL else { return }
-        player = AVPlayer(url: url)
-        isPlayerPresented = true
+        playback = PlaybackSession(
+            player: AVPlayer(url: url),
+            duration: videoAsset?.duration ?? 0
+        )
     }
 
-    private func handlePlayerDismissed() {
-        guard let lesson, let player else { return }
-
-        let seconds = player.currentTime().seconds
-        let duration = videoAsset?.duration ?? 0
-        let percent = (seconds.isFinite && duration > 0)
-            ? min(Int((seconds / duration) * 100), 100)
-            : 0
-
-        player.pause()
-        self.player = nil
-
-        guard percent > 0 else { return }
+    private func reportProgress(seconds: Double, percent: Int) {
+        guard let lesson, percent > 0 else { return }
         let shouldComplete = percent >= 90
 
         Task { @MainActor in

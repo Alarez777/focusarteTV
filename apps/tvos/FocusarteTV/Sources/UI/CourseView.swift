@@ -18,7 +18,7 @@ struct CourseView: View {
             } else if let errorMessage {
                 VStack(spacing: 24) {
                     Text(errorMessage)
-                    Button("Reintentar") { Task { await load() } }
+                    Button("Reintentar") { Task { await refresh() } }
                 }
             } else {
                 ProgressView()
@@ -27,7 +27,13 @@ struct CourseView: View {
         .navigationDestination(item: $route) { route in
             LessonView(route: route)
         }
-        .task { await load() }
+        .onChange(of: route?.summary.id) { _, newValue in
+            // Al volver de una lección, refrescamos el progreso en segundo plano.
+            if newValue == nil {
+                Task { await refresh() }
+            }
+        }
+        .task { await loadWithCache() }
     }
 
     private func content(_ outline: CourseOutline) -> some View {
@@ -94,11 +100,39 @@ struct CourseView: View {
         focusedLesson = next.id
     }
 
-    private func load() async {
+    // MARK: - Datos
+
+    @MainActor
+    private func loadWithCache() async {
+        if let cached = session.cachedOutline(for: course.slug) {
+            outline = cached
+        }
+        await refresh()
+    }
+
+    @MainActor
+    private func refresh() async {
         do {
-            outline = try await session.client.loadCourse(slug: course.slug)
+            let fresh = try await session.loadOutline(slug: course.slug)
+            if let current = outline, isSame(current, fresh) {
+                return
+            }
+            outline = fresh
         } catch {
-            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            // Con cache mostramos lo viejo; solo reportamos si no hay nada.
+            if outline == nil {
+                errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
+        }
+    }
+
+    private func isSame(_ a: CourseOutline, _ b: CourseOutline) -> Bool {
+        guard a.title == b.title, a.sections.count == b.sections.count else { return false }
+        let left = a.allLessons
+        let right = b.allLessons
+        guard left.count == right.count else { return false }
+        return zip(left, right).allSatisfy {
+            $0.id == $1.id && $0.title == $1.title && $0.percentComplete == $1.percentComplete
         }
     }
 }

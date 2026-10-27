@@ -5,6 +5,8 @@ import AVFoundation
 /// Reproducción a pantalla completa con el player nativo de Apple.
 struct PlayerScreen: View {
     let player: AVPlayer
+    let duration: TimeInterval
+    let onFinish: (Double, Int) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -16,6 +18,15 @@ struct PlayerScreen: View {
             }
             .onDisappear {
                 player.pause()
+
+                let seconds = player.currentTime().seconds
+                let percent: Int
+                if seconds.isFinite, duration > 0 {
+                    percent = min(Int((seconds / duration) * 100), 100)
+                } else {
+                    percent = 0
+                }
+                onFinish(seconds.isFinite ? seconds : 0, percent)
             }
             .onReceive(
                 NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)

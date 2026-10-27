@@ -6,15 +6,6 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 
 ## [Unreleased]
 
-### Changed
-- Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
-- La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".
-- La reproducción es a pantalla completa con `AVPlayerViewController` y vuelve
-  al post al terminar.
-- Play/Pause del control remoto sobre una fila abre el video directamente.
-- "Reproducir" pasó al header, a la derecha de "Vista"; la miniatura baja debajo
-  del header y usa el `stillUrl` original de Kajabi (no el frame de Wistia).
-
 ### Added
 - Scaffold del proyecto: app tvOS mínima en SwiftUI, proyecto XcodeGen y CI que
   publica un `.ipa` sin firmar en cada push.
@@ -22,12 +13,26 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - `docs/kajabi-protocol.md` con el protocolo verificado de Focusarte/Kajabi.
 - Núcleo `FocusarteCore`: cliente HTTP con cookies y CSRF, login, parsers de
   biblioteca/curso/lección, resolución de Wistia a HLS y reporte de progreso.
-  Cubierto por 21 tests sobre fixtures reales anonimizados.
+  Cubierto por 24 tests sobre fixtures reales anonimizados.
 - App: login con Keychain y re-login silencioso, "Mis Cursos", outline del curso
   con progreso, reproductor HLS, marcado de lección vista y visor de PDFs.
 - Ícono de app y Top Shelf con la marca Focusarte (capas Back/Middle/Front).
+- Cache de outlines en memoria (stale-while-revalidate): al reentrar a un curso
+  se muestra al instante y se refresca en segundo plano.
+
+### Changed
+- Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
+- La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".
+- La reproducción es a pantalla completa con `AVPlayerViewController` y vuelve
+  al post al terminar.
+- Play/Pause del control remoto sobre una fila abre el video directamente.
+- "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va
+  arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 
 ### Fixed
+- El primer "Reproducir" abría un player vacío y perdía el foco: ahora el cover
+  usa `fullScreenCover(item:)` con el player dentro del item.
+- Play del control remoto sobre el botón "Reproducir" también inicia el video.
 - Login: `URLSession` seguía los redirects por su cuenta y se perdían los
   `Set-Cookie` del `302` de login; la sesión quedaba sin cookie y volvía a
   `/login`. Ahora los redirects se resuelven a mano absorbiendo cookies en cada
