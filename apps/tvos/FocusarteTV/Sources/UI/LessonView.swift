@@ -162,7 +162,11 @@ struct LessonView: View {
             url: url,
             duration: videoAsset?.duration ?? 0,
             progressToken: lesson.progressToken,
-            client: session.client
+            client: session.client,
+            title: lesson.title,
+            courseTitle: route.courseTitle,
+            sectionTitle: route.sectionTitle,
+            artworkURL: lesson.posterURL ?? videoAsset?.posterURL
         )
     }
 

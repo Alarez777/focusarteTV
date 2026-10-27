@@ -26,6 +26,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   restaura a pantalla completa al volver del PiP.
 - `UIBackgroundModes: audio` y `AVAudioSession(.playback)` para reproducción en
   segundo plano.
+- Metadatos del reproductor: `externalMetadata` (título, curso · bloque,
+  carátula) y `MPNowPlayingInfoCenter` (lección / curso / bloque).
 
 ### Changed
 - Al abrir un curso, el foco va a la primera lección sin completar (con scroll).

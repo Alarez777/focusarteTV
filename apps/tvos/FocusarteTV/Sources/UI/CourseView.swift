@@ -56,7 +56,7 @@ struct CourseView: View {
                                 .foregroundStyle(.white.opacity(0.9))
 
                             ForEach(section.lessons) { lesson in
-                                lessonButton(lesson)
+                                lessonButton(lesson, sectionTitle: section.title)
                             }
                         }
                     }
@@ -70,16 +70,26 @@ struct CourseView: View {
         .navigationTitle(course.title)
     }
 
-    private func lessonButton(_ lesson: LessonSummary) -> some View {
+    private func lessonButton(_ lesson: LessonSummary, sectionTitle: String) -> some View {
         Button {
-            route = LessonRoute(summary: lesson, autoPlay: false)
+            route = LessonRoute(
+                summary: lesson,
+                autoPlay: false,
+                courseTitle: course.title,
+                sectionTitle: sectionTitle
+            )
         } label: {
             LessonRow(lesson: lesson)
         }
         .focused($focusedLesson, equals: lesson.id)
         .id(lesson.id)
         .onPlayPauseCommand {
-            route = LessonRoute(summary: lesson, autoPlay: true)
+            route = LessonRoute(
+                summary: lesson,
+                autoPlay: true,
+                courseTitle: course.title,
+                sectionTitle: sectionTitle
+            )
         }
     }
 
