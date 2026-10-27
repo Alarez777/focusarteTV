@@ -21,3 +21,9 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 ### Fixed
 - La app no arrancaba en el Apple TV: faltaba `UIApplicationSceneManifest` y
   `UILaunchScreen` en el `Info.plist`.
+- Arranque en tvOS 27: se eliminaron del enlace `PDFKit` y `_AVKit_SwiftUI`
+  (PDFs con Core Graphics; video con `AVPlayerViewController`).
+- Login devolvía "Email o contraseña incorrectos" con credenciales válidas: el
+  header `Origin` se enviaba con barra final y Rails respondía 422 (CSRF).
+- Controles de login nativos de tvOS (sin fondo/borde propios) y con
+  `textContentType` para el autocompletado desde el iPhone.

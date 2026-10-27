@@ -33,7 +33,7 @@ public enum KajabiHTML {
     public static func loginErrorMessage(from html: String) -> String? {
         guard let doc = try? SwiftSoup.parse(html) else { return nil }
         let selectors = [
-            ".alert", ".flash", ".error", ".invalid-feedback",
+            ".alert", ".auth__message", ".flash", ".error", ".invalid-feedback",
             "[role='alert']", "[data-error]"
         ]
         for selector in selectors {

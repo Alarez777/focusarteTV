@@ -86,7 +86,7 @@ final class KajabiClientTests: XCTestCase {
             status: 302,
             headers: [
                 "Location": "/library",
-                "Set-Cookie": "_kjb_session=session123; path=/; HttpOnly"
+                "Set-Cookie": "_kjb_session=session123; path=/; HttpOnly, remember_member_token=remember123; path=/; HttpOnly"
             ]
         )
         transport.stub("GET", libraryPath, body: Data(libraryHTML.utf8))
@@ -99,6 +99,7 @@ final class KajabiClientTests: XCTestCase {
 
         let cookies = await client.cookieSnapshot
         XCTAssertEqual(cookies["_kjb_session"], "session123")
+        XCTAssertEqual(cookies["remember_member_token"], "remember123")
 
         let loginGET = try XCTUnwrap(
             transport.requests.first { $0.httpMethod == "GET" && $0.url?.path == "/login" }
@@ -110,6 +111,8 @@ final class KajabiClientTests: XCTestCase {
             transport.requests.first { $0.httpMethod == "POST" && $0.url?.path == "/login" }
         )
         XCTAssertEqual(post.value(forHTTPHeaderField: "X-CSRF-Token"), "CSRF_123")
+        // Rails rechaza con 422 si el Origin lleva barra final.
+        XCTAssertEqual(post.value(forHTTPHeaderField: "Origin"), "https://www.focusarte.com")
 
         let body = String(data: post.httpBody ?? Data(), encoding: .utf8) ?? ""
         XCTAssertTrue(body.contains("member%5Bemail%5D=user%40example.invalid"))
@@ -144,6 +147,28 @@ final class KajabiClientTests: XCTestCase {
             XCTFail("Debía lanzar invalidCredentials")
         } catch let KajabiError.invalidCredentials(message) {
             XCTAssertEqual(message, "Inválido correo electrónico o contraseña.")
+        } catch {
+            XCTFail("Error inesperado: \(error)")
+        }
+    }
+
+    func testLoginRejectionIncludesHTTPStatus() async throws {
+        let transport = makeTransport()
+        transport.stub("GET", "/login", body: Data(loginHTML.utf8))
+        transport.stub(
+            "POST",
+            "/login",
+            status: 422,
+            body: Data("<html><body>CSRF inválido</body></html>".utf8)
+        )
+
+        let client = KajabiClient(baseURL: baseURL, transport: transport)
+
+        do {
+            try await client.signIn(email: "user@example.invalid", password: "secret")
+            XCTFail("Debía lanzar invalidCredentials")
+        } catch let KajabiError.invalidCredentials(message) {
+            XCTAssertEqual(message, "No se pudo iniciar sesión (HTTP 422).")
         } catch {
             XCTFail("Error inesperado: \(error)")
         }

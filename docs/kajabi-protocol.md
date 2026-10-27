@@ -28,6 +28,10 @@ member[password]=<password>
 member[remember_me]=1
 ```
 
+> **Ojo con `Origin`:** Rails valida el origen si el header está presente. Mandar
+> `Origin: https://www.focusarte.com/` (con barra final) devuelve **422 CSRF inválido**
+> aunque el token sea correcto. El valor válido es `scheme://host[:port]` sin barra.
+
 Respuesta correcta: `302` al destino + cookies. Credenciales inválidas: `200` con
 `Inválido correo electrónico o contraseña.`
 

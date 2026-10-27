@@ -36,8 +36,10 @@ public actor KajabiClient {
 
     public var cookieSnapshot: [String: String] { cookies.raw }
 
+    /// `_kjb_session` se crea incluso en visitas anónimas; la cookie de
+    /// "recordarme" solo aparece después de un login real.
     public var isAuthenticated: Bool {
-        cookies["_kjb_session"] != nil || cookies["remember_member_token"] != nil
+        cookies["remember_member_token"] != nil
     }
 
     public var currentCSRFToken: String? { csrfToken }
@@ -79,11 +81,15 @@ public actor KajabiClient {
 
         if response.url?.path.hasSuffix("/login") == true {
             let message = KajabiHTML.loginErrorMessage(from: response.text)
-            throw KajabiError.invalidCredentials(message ?? "Email o contraseña incorrectos.")
+            throw KajabiError.invalidCredentials(
+                message ?? "No se pudo iniciar sesión (HTTP \(response.statusCode))."
+            )
         }
 
-        guard isAuthenticated else {
-            throw KajabiError.invalidCredentials("El sitio no devolvió una sesión.")
+        if !isAuthenticated {
+            // Algunos flujos solo entregan la cookie de sesión corta: en vez de
+            // asumir, validamos contra la biblioteca.
+            _ = try await loadLibrary()
         }
         return true
     }
@@ -178,6 +184,21 @@ public actor KajabiClient {
 
     // MARK: - HTTP
 
+    /// Origen exacto para el header `Origin` (`scheme://host[:port]`).
+    /// Rails compara estrictamente: con barra final responde 422 (CSRF inválido).
+    private var originHeader: String? {
+        guard let components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false),
+              let scheme = components.scheme,
+              let host = components.host else {
+            return nil
+        }
+        var value = "\(scheme)://\(host)"
+        if let port = components.port {
+            value += ":\(port)"
+        }
+        return value
+    }
+
     private func perform(
         _ path: String,
         method: String = "GET",
@@ -214,7 +235,9 @@ public actor KajabiClient {
                 )
             }
             if currentMethod != "GET" {
-                request.setValue(baseURL.absoluteString + "/", forHTTPHeaderField: "Origin")
+                if let origin = originHeader {
+                    request.setValue(origin, forHTTPHeaderField: "Origin")
+                }
                 if let csrfToken {
                     request.setValue(csrfToken, forHTTPHeaderField: "X-CSRF-Token")
                 }
