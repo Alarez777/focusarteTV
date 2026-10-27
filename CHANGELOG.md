@@ -6,6 +6,13 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 
 ## [Unreleased]
 
+### Changed
+- Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
+- La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".
+- La reproducción es a pantalla completa con `AVPlayerViewController` y vuelve
+  al post al terminar.
+- Play/Pause del control remoto sobre una fila abre el video directamente.
+
 ### Added
 - Scaffold del proyecto: app tvOS mínima en SwiftUI, proyecto XcodeGen y CI que
   publica un `.ipa` sin firmar en cada push.

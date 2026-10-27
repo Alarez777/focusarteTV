@@ -3,30 +3,28 @@ import AVFoundation
 import FocusarteCore
 
 struct LessonView: View {
-    let summary: LessonSummary
+    let route: LessonRoute
 
     @EnvironmentObject private var session: SessionStore
 
     @State private var lesson: Lesson?
     @State private var blocks: [LessonBlock] = []
+    @State private var videoAsset: VideoAsset?
     @State private var player: AVPlayer?
-    @State private var duration: Double = 0
+    @State private var isPlayerPresented = false
     @State private var isCompleted = false
     @State private var isUpdating = false
     @State private var errorMessage: String?
+    @State private var autoPlayHandled = false
+    @FocusState private var playButtonFocused: Bool
 
     private let baseURL = URL(string: "https://www.focusarte.com")!
+    private var summary: LessonSummary { route.summary }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 36) {
-                if let player {
-                    PlayerView(player: player)
-                        .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                        .frame(maxWidth: 1400)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-
+                videoSection
                 header
 
                 if let errorMessage {
@@ -44,7 +42,43 @@ struct LessonView: View {
             .padding(80)
         }
         .task { await load() }
-        .onDisappear { reportProgress() }
+        .fullScreenCover(isPresented: $isPlayerPresented, onDismiss: handlePlayerDismissed) {
+            if let player {
+                PlayerScreen(player: player)
+            }
+        }
+    }
+
+    // MARK: - Video
+
+    @ViewBuilder
+    private var videoSection: some View {
+        if let asset = videoAsset {
+            VStack(alignment: .leading, spacing: 20) {
+                AsyncImage(url: asset.posterURL) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } else {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.08))
+                    }
+                }
+                .frame(maxWidth: 1200)
+                .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+                Button {
+                    startPlayback()
+                } label: {
+                    Label("Reproducir", systemImage: "play.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                }
+                .focused($playButtonFocused)
+            }
+        }
     }
 
     private var header: some View {
@@ -88,6 +122,8 @@ struct LessonView: View {
         }
     }
 
+    // MARK: - Datos
+
     private func load() async {
         do {
             let loaded = try await session.client.loadLesson(path: summary.path)
@@ -96,16 +132,60 @@ struct LessonView: View {
             blocks = LessonHTMLParser.blocks(from: loaded.bodyHTML, baseURL: baseURL)
 
             if let video = loaded.video {
-                let asset = try await session.client.resolveVideo(mediaID: video.mediaID)
-                duration = asset.duration
-                if let url = asset.playbackURL {
-                    let newPlayer = AVPlayer(url: url)
-                    player = newPlayer
-                    newPlayer.play()
+                videoAsset = try await session.client.resolveVideo(mediaID: video.mediaID)
+            }
+
+            if route.autoPlay, !autoPlayHandled {
+                autoPlayHandled = true
+                if videoAsset?.playbackURL != nil {
+                    startPlayback()
+                    return
                 }
+            }
+
+            if videoAsset != nil {
+                // El foco arranca en "Reproducir", que es la acción principal.
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                playButtonFocused = true
             }
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    // MARK: - Reproducción
+
+    private func startPlayback() {
+        guard let url = videoAsset?.playbackURL else { return }
+        player = AVPlayer(url: url)
+        isPlayerPresented = true
+    }
+
+    private func handlePlayerDismissed() {
+        guard let lesson, let player else { return }
+
+        let seconds = player.currentTime().seconds
+        let duration = videoAsset?.duration ?? 0
+        let percent = (seconds.isFinite && duration > 0)
+            ? min(Int((seconds / duration) * 100), 100)
+            : 0
+
+        player.pause()
+        self.player = nil
+
+        guard percent > 0 else { return }
+        let shouldComplete = percent >= 90
+
+        Task { @MainActor in
+            try? await session.client.reportProgress(
+                token: lesson.progressToken,
+                seconds: seconds,
+                percent: percent
+            )
+            if shouldComplete && !isCompleted {
+                try? await session.client.setCompleted(true, token: lesson.progressToken)
+                isCompleted = true
+            }
         }
     }
 
@@ -121,27 +201,6 @@ struct LessonView: View {
                 errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
             isUpdating = false
-        }
-    }
-
-    private func reportProgress() {
-        guard let lesson, let player else { return }
-
-        let seconds = player.currentTime().seconds
-        guard seconds.isFinite, seconds > 0, duration > 0 else { return }
-
-        let percent = min(Int((seconds / duration) * 100), 100)
-        let shouldComplete = percent >= 90
-
-        Task { @MainActor in
-            try? await session.client.reportProgress(
-                token: lesson.progressToken,
-                seconds: seconds,
-                percent: percent
-            )
-            if shouldComplete && !isCompleted {
-                try? await session.client.setCompleted(true, token: lesson.progressToken)
-            }
         }
     }
 }
