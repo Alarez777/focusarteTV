@@ -70,24 +70,13 @@ jobs:
       - name: Install and launch
         working-directory: apps/tvos
         run: |
-          set +e
           APP=$(find build/dd/Build/Products -maxdepth 2 -name "FocusarteTV.app" -print -quit)
           if [ -z "$APP" ]; then
             echo "::error::No se encontró FocusarteTV.app"
             exit 1
           fi
           echo "APP=$APP"
-          xcrun simctl install "$UDID" "$APP"
-          echo "--- install exit=$? ---"
-
-          # launch --console-pty bloquea hasta que la app termina (o hasta el timeout)
-          timeout 120 xcrun simctl launch --console-pty --terminate-running-process \
-            "$UDID" com.focusartetv.FocusarteTV 2>&1 | tee build/sim-run.log
-          echo "--- launch exit=$? ---"
-
-          sleep 2
-          xcrun simctl io "$UDID" screenshot build/sim-shot.png || true
-          xcrun simctl spawn "$UDID" launchctl list | grep -i focusarte || true
+          bash ../../scripts/sim-smoke.sh "$APP" "$UDID" build
 
       - name: Collect crash reports
         if: always()
