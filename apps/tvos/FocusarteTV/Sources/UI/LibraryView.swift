@@ -50,6 +50,10 @@ struct LibraryView: View {
 
             Spacer()
 
+            NavigationLink("Configuración") {
+                SettingsView()
+            }
+
             Button("Cerrar sesión") {
                 Task { await session.signOut() }
             }

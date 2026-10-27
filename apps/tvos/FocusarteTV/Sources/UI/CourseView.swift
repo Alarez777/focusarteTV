@@ -75,6 +75,7 @@ struct CourseView: View {
             route = LessonRoute(
                 summary: lesson,
                 autoPlay: false,
+                courseSlug: course.slug,
                 courseTitle: course.title,
                 sectionTitle: sectionTitle
             )
@@ -87,6 +88,7 @@ struct CourseView: View {
             route = LessonRoute(
                 summary: lesson,
                 autoPlay: true,
+                courseSlug: course.slug,
                 courseTitle: course.title,
                 sectionTitle: sectionTitle
             )

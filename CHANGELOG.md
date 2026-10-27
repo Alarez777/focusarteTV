@@ -29,6 +29,16 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Metadatos del reproductor: `externalMetadata` (título, curso · bloque,
   carátula) y `MPNowPlayingInfoCenter` (lección / curso / bloque).
 
+### Added
+- PiP nativo con `PlayerHostViewController` retenido por `PlaybackManager`:
+  el player y su delegate sobreviven al cover, así el restore a pantalla
+  completa funciona aunque el video flote.
+- Subtítulo `"Curso · Bloque"` en la barra de transporte del player.
+- Autoplay de la siguiente lección con tarjeta Up Next (miniatura, título y
+  cuenta regresiva) y acciones nativas Cancelar/Siguiente; al terminar el
+  temporizador avanza sola.
+- Pantalla Configuración con toggle para desactivar el autoplay.
+
 ### Changed
 - Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
 - La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".

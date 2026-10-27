@@ -157,17 +157,63 @@ struct LessonView: View {
     private func startPlayback() {
         guard let url = videoAsset?.playbackURL, let lesson else { return }
 
+        let metadata = PlaybackMetadata(
+            title: lesson.title,
+            courseTitle: route.courseTitle,
+            sectionTitle: route.sectionTitle,
+            artworkURL: lesson.posterURL ?? videoAsset?.posterURL
+        )
+
         playback.play(
             key: lesson.id,
             url: url,
             duration: videoAsset?.duration ?? 0,
             progressToken: lesson.progressToken,
             client: session.client,
-            title: lesson.title,
-            courseTitle: route.courseTitle,
-            sectionTitle: route.sectionTitle,
-            artworkURL: lesson.posterURL ?? videoAsset?.posterURL
+            metadata: metadata,
+            courseSlug: route.courseSlug,
+            nextProvider: makeNextProvider()
         )
+    }
+
+    /// Resuelve la próxima lección reproducible a partir del outline cacheado.
+    private func makeNextProvider() -> PlaybackManager.NextProvider? {
+        guard let outline = session.cachedOutline(for: route.courseSlug) else { return nil }
+
+        let flat: [(section: String, lesson: LessonSummary)] = outline.sections.flatMap { section in
+            section.lessons.map { (section.title, $0) }
+        }
+
+        return { currentKey in
+            guard let index = flat.firstIndex(where: { $0.lesson.id == currentKey }) else {
+                return nil
+            }
+
+            let candidates = flat[(index + 1)...].prefix(4)
+            for candidate in candidates {
+                guard let lesson = try? await session.client.loadLesson(path: candidate.lesson.path),
+                      let video = lesson.video,
+                      let asset = try? await session.client.resolveVideo(mediaID: video.mediaID),
+                      let url = asset.playbackURL else {
+                    continue
+                }
+
+                return UpNextLesson(
+                    key: lesson.id,
+                    url: url,
+                    duration: asset.duration,
+                    progressToken: lesson.progressToken,
+                    client: session.client,
+                    metadata: PlaybackMetadata(
+                        title: lesson.title,
+                        courseTitle: route.courseTitle,
+                        sectionTitle: candidate.section,
+                        artworkURL: lesson.posterURL ?? asset.posterURL
+                    )
+                )
+            }
+            return nil
+        }
     }
 
     private func toggleCompleted() {
