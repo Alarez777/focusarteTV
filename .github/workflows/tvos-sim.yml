@@ -55,19 +55,9 @@ jobs:
       - name: Boot simulator
         run: |
           set -euo pipefail
-          UDID=$(xcrun simctl list devices available -j | python3 -c "
-import json, sys
-data = json.load(sys.stdin)['devices']
-candidates = []
-for runtime, devices in data.items():
-    if 'tvOS' not in runtime:
-        continue
-    for device in devices:
-        if device.get('isAvailable'):
-            candidates.append((runtime, device['udid']))
-candidates.sort()
-print(candidates[-1][1] if candidates else '')
-")
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '.devices | to_entries[] | select(.key | test("tvOS")) | .value[] | select(.isAvailable) | .udid' \
+            | tail -1)
           if [ -z "$UDID" ]; then
             echo "::error::No hay simuladores de tvOS disponibles"
             xcrun simctl list devices available
