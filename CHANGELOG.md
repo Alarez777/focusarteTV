@@ -16,3 +16,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   Cubierto por 21 tests sobre fixtures reales anonimizados.
 - App: login con Keychain y re-login silencioso, "Mis Cursos", outline del curso
   con progreso, reproductor HLS, marcado de lección vista y visor de PDFs.
+- Ícono de app y Top Shelf con la marca Focusarte (capas Back/Middle/Front).
+
+### Fixed
+- La app no arrancaba en el Apple TV: faltaba `UIApplicationSceneManifest` y
+  `UILaunchScreen` en el `Info.plist`.
