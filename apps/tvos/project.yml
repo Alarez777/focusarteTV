@@ -1,0 +1,43 @@
+name: FocusarteTV
+
+# El .xcodeproj no se versiona: se genera con
+#   brew install xcodegen && xcodegen generate
+options:
+  bundleIdPrefix: com.focusartetv
+  deploymentTarget:
+    tvOS: "17.0"
+  developmentLanguage: es
+  createIntermediateGroups: true
+  minimumXcodeGenVersion: "2.42.0"
+  xcodeVersion: "26.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  FocusarteTV:
+    type: application
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: FocusarteTV/Sources
+      - path: FocusarteTV/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.focusartetv.FocusarteTV
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "3"
+    info:
+      path: FocusarteTV/Info.plist
+      properties:
+        CFBundleDisplayName: Focusarte
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UIUserInterfaceStyle: Dark
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+        ITSAppUsesNonExemptEncryption: false

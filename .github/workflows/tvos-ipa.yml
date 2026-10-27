@@ -1,0 +1,157 @@
+name: tvOS IPA
+
+on:
+  push:
+    branches: [develop, main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tvos-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-15
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          latest=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Seleccionando $latest"
+          sudo xcode-select -s "$latest"
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i tvos || true
+
+      - name: Read app version
+        working-directory: apps/tvos
+        run: |
+          version=$(sed -n 's/^ *MARKETING_VERSION: *"\(.*\)"$/\1/p' project.yml | head -1)
+          build=$(sed -n 's/^ *CURRENT_PROJECT_VERSION: *"\(.*\)"$/\1/p' project.yml | head -1)
+
+          if [ -z "$version" ] || [ -z "$build" ]; then
+            echo "::error::No se pudo leer MARKETING_VERSION / CURRENT_PROJECT_VERSION de project.yml"
+            exit 1
+          fi
+
+          echo "App version: $version ($build)"
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+
+          # Un tag nunca debe publicar un binario cuya versión no coincida.
+          if [ "${GITHUB_REF_TYPE:-branch}" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::El tag ${GITHUB_REF_NAME} no coincide con MARKETING_VERSION ${version}"
+            exit 1
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apps/tvos
+        run: |
+          xcodegen generate
+          xcodebuild -project FocusarteTV.xcodeproj -list
+
+      - name: Archive tvOS app
+        working-directory: apps/tvos
+        run: |
+          set -o pipefail
+          rm -rf build
+          mkdir -p build
+
+          xcodebuild \
+            -project FocusarteTV.xcodeproj \
+            -scheme FocusarteTV \
+            -configuration Release \
+            -destination "generic/platform=tvOS" \
+            -archivePath "$PWD/build/FocusarteTV.xcarchive" \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            SKIP_INSTALL=NO \
+            > build/archive.log 2>&1
+
+      - name: Package unsigned IPA
+        working-directory: apps/tvos
+        run: |
+          set -euo pipefail
+
+          APP=$(find build/FocusarteTV.xcarchive/Products/Applications \
+            -maxdepth 1 -name "*.app" -print -quit)
+
+          if [ -z "$APP" ]; then
+            echo "::error::No se encontró FocusarteTV.app en el archive"
+            exit 1
+          fi
+          echo "App: $APP"
+
+          rm -rf build/ipa
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+
+          (
+            cd build/ipa
+            zip -qr "../FocusarteTV-${APP_VERSION}-${GITHUB_SHA::7}-unsigned.ipa" Payload
+          )
+
+          ls -lh build/*.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusarteTV-unsigned
+          path: apps/tvos/build/FocusarteTV-*-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish GitHub release
+        if: github.ref_type == 'tag'
+        working-directory: apps/tvos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          tag="$GITHUB_REF_NAME"
+          ipa=$(ls build/FocusarteTV-*-unsigned.ipa | head -1)
+          clean="build/FocusarteTV-${APP_VERSION}-unsigned.ipa"
+          cp "$ipa" "$clean"
+
+          notes=$(mktemp)
+          awk -v heading="## [${APP_VERSION}]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found { print }
+          ' ../../CHANGELOG.md > "$notes"
+
+          if [ ! -s "$notes" ]; then
+            echo "::error::CHANGELOG.md no tiene sección para ${APP_VERSION}"
+            exit 1
+          fi
+
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "$clean" --clobber
+          else
+            gh release create "$tag" "$clean" \
+              --verify-tag \
+              --title "FocusarteTV ${APP_VERSION}" \
+              --notes-file "$notes"
+          fi
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusarteTV-build-log
+          path: apps/tvos/build/archive.log
+          if-no-files-found: ignore
+          retention-days: 7

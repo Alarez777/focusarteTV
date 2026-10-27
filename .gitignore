@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Xcode / builds
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+
+# XcodeGen output (el proyecto se genera desde apps/tvos/project.yml)
+apps/tvos/*.xcodeproj
+apps/tvos/FocusarteTV/Info.plist
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Entorno local
+.env
+.env.*
