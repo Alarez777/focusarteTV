@@ -73,6 +73,29 @@ final class KajabiHTMLTests: XCTestCase {
         XCTAssertEqual(lesson.downloads.first?.title, "Focusarte - Judit y Holofernes")
     }
 
+    func testPosterURLFromStillURL() throws {
+        let html = #"""
+        <html><body><script>
+        _wq.push({"abc": JSON.parse('{\"playerColor\":\"#de3e50\",\"stillUrl\":\"https://cdn.example.com/poster.jpg\",\"autoPlay\":false}')});
+        </script></body></html>
+        """#
+
+        let lesson = try KajabiHTML.parseLesson(
+            html,
+            path: "/products/x/categories/1/posts/2"
+        )
+        XCTAssertEqual(lesson.posterURL?.absoluteString, "https://cdn.example.com/poster.jpg")
+    }
+
+    func testPosterURLIsNilWithoutStillURL() throws {
+        let html = try Fixture.text("lesson-video.html")
+        let lesson = try KajabiHTML.parseLesson(
+            html,
+            path: "/products/historia-del-arte-clasico/categories/2150657000/posts/2159073149"
+        )
+        XCTAssertNil(lesson.posterURL)
+    }
+
     func testCSRFToken() throws {
         let html = try Fixture.text("library.html")
         XCTAssertEqual(KajabiHTML.csrfToken(from: html), "TEST_CSRF")

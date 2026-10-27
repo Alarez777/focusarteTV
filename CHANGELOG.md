@@ -12,6 +12,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - La reproducción es a pantalla completa con `AVPlayerViewController` y vuelve
   al post al terminar.
 - Play/Pause del control remoto sobre una fila abre el video directamente.
+- "Reproducir" pasó al header, a la derecha de "Vista"; la miniatura baja debajo
+  del header y usa el `stillUrl` original de Kajabi (no el frame de Wistia).
 
 ### Added
 - Scaffold del proyecto: app tvOS mínima en SwiftUI, proyecto XcodeGen y CI que

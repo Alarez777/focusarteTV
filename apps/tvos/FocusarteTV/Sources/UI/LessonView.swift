@@ -24,8 +24,8 @@ struct LessonView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 36) {
-                videoSection
                 header
+                videoSection
 
                 if let errorMessage {
                     Text(errorMessage)
@@ -54,35 +54,25 @@ struct LessonView: View {
     @ViewBuilder
     private var videoSection: some View {
         if let asset = videoAsset {
-            VStack(alignment: .leading, spacing: 20) {
-                AsyncImage(url: asset.posterURL) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } else {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.08))
-                    }
+            AsyncImage(url: lesson?.posterURL ?? asset.posterURL) { phase in
+                if let image = phase.image {
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } else {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.08))
                 }
-                .frame(maxWidth: 1200)
-                .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                Button {
-                    startPlayback()
-                } label: {
-                    Label("Reproducir", systemImage: "play.fill")
-                        .font(.system(size: 24, weight: .semibold))
-                }
-                .focused($playButtonFocused)
             }
+            .frame(maxWidth: 1200)
+            .aspectRatio(16.0 / 9.0, contentMode: .fit)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 30) {
+        HStack(alignment: .top, spacing: 24) {
             Text(lesson?.title ?? summary.title)
                 .font(.system(size: 40, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
@@ -96,6 +86,16 @@ struct LessonView: View {
                     .font(.system(size: 22, weight: .semibold))
             }
             .disabled(isUpdating || lesson == nil)
+
+            if videoAsset?.playbackURL != nil {
+                Button {
+                    startPlayback()
+                } label: {
+                    Label("Reproducir", systemImage: "play.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                }
+                .focused($playButtonFocused)
+            }
         }
     }
 

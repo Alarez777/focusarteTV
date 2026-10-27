@@ -100,6 +100,8 @@ public struct Lesson: Identifiable, Sendable {
     /// HTML del cuerpo de la lección (se renderiza nativo en tvOS).
     public let bodyHTML: String
     public let video: WistiaVideoRef?
+    /// Miniatura que Focusarte configura para el player en la web (`stillUrl`).
+    public let posterURL: URL?
     public let downloads: [LessonDownload]
     /// JWT firmado que Kajabi usa para reportar progreso de esta lección.
     public let progressToken: String
@@ -114,6 +116,7 @@ public struct Lesson: Identifiable, Sendable {
         path: String,
         bodyHTML: String,
         video: WistiaVideoRef?,
+        posterURL: URL?,
         downloads: [LessonDownload],
         progressToken: String,
         trackedPercent: Int,
@@ -125,6 +128,7 @@ public struct Lesson: Identifiable, Sendable {
         self.path = path
         self.bodyHTML = bodyHTML
         self.video = video
+        self.posterURL = posterURL
         self.downloads = downloads
         self.progressToken = progressToken
         self.trackedPercent = trackedPercent

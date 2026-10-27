@@ -219,6 +219,7 @@ public enum KajabiHTML {
             path: path,
             bodyHTML: bodyHTML,
             video: mediaID.map { WistiaVideoRef(mediaID: $0) },
+            posterURL: posterURL(from: html),
             downloads: downloads,
             progressToken: token,
             trackedPercent: min(max(trackedPercent, 0), 100),
@@ -245,6 +246,20 @@ public enum KajabiHTML {
         guard let element else { return "" }
         let value = (try? element.text()) ?? ""
         return value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Miniatura configurada por Kajabi en el embed de Wistia.
+    ///
+    /// En el HTML aparece escapada dentro de `JSON.parse('…')`:
+    /// `\"stillUrl\":\"https://…\"`. Aceptamos con o sin las barras.
+    private static func posterURL(from html: String) -> URL? {
+        let pattern = #"stillUrl[\\"]*:[\\"]*(https?://[^\\"]+)"#
+        guard let range = html.range(of: pattern, options: .regularExpression) else {
+            return nil
+        }
+        let fragment = String(html[range])
+        guard let start = fragment.range(of: "http") else { return nil }
+        return URL(string: String(fragment[start.lowerBound...]))
     }
 
     private static func progressPercent(in element: Element) -> Int {
