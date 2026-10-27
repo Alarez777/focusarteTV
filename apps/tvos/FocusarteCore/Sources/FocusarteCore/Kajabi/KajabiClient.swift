@@ -80,9 +80,17 @@ public actor KajabiClient {
         refreshCSRF(from: response.text)
 
         if response.url?.path.hasSuffix("/login") == true {
-            let message = KajabiHTML.loginErrorMessage(from: response.text)
+            if let message = KajabiHTML.loginErrorMessage(from: response.text) {
+                throw KajabiError.invalidCredentials(message)
+            }
+
+            // Sin mensaje del servidor: mostramos qué página volvió, para poder
+            // distinguir un challenge de Cloudflare de un rechazo de Rails.
+            let title = KajabiHTML.title(from: response.text) ?? "sin título"
+            let form = KajabiHTML.hasLoginForm(response.text) ? "sí" : "no"
+            let remember = cookies["remember_member_token"] != nil ? "sí" : "no"
             throw KajabiError.invalidCredentials(
-                message ?? "No se pudo iniciar sesión (HTTP \(response.statusCode))."
+                "HTTP \(response.statusCode) · \(response.url?.path ?? "?") · \(title) · form: \(form) · remember: \(remember)"
             )
         }
 
@@ -238,6 +246,8 @@ public actor KajabiClient {
                 if let origin = originHeader {
                     request.setValue(origin, forHTTPHeaderField: "Origin")
                 }
+                // Un navegador manda Referer en el submit del form.
+                request.setValue(currentURL.absoluteString, forHTTPHeaderField: "Referer")
                 if let csrfToken {
                     request.setValue(csrfToken, forHTTPHeaderField: "X-CSRF-Token")
                 }

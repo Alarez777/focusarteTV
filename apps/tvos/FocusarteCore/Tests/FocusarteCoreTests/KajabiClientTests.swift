@@ -168,7 +168,8 @@ final class KajabiClientTests: XCTestCase {
             try await client.signIn(email: "user@example.invalid", password: "secret")
             XCTFail("Debía lanzar invalidCredentials")
         } catch let KajabiError.invalidCredentials(message) {
-            XCTAssertEqual(message, "No se pudo iniciar sesión (HTTP 422).")
+            XCTAssertTrue(message.contains("HTTP 422"), "mensaje: \(message)")
+            XCTAssertTrue(message.contains("sin título"), "mensaje: \(message)")
         } catch {
             XCTFail("Error inesperado: \(error)")
         }

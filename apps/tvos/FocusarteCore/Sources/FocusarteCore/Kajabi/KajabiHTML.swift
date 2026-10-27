@@ -30,6 +30,17 @@ public enum KajabiHTML {
         return value.isEmpty ? nil : value
     }
 
+    public static func title(from html: String) -> String? {
+        guard let doc = try? SwiftSoup.parse(html) else { return nil }
+        let value = ((try? doc.title()) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : String(value.prefix(70))
+    }
+
+    public static func hasLoginForm(_ html: String) -> Bool {
+        guard let doc = try? SwiftSoup.parse(html) else { return false }
+        return ((try? doc.select("form#new_member_session"))?.isEmpty() == false)
+    }
+
     public static func loginErrorMessage(from html: String) -> String? {
         guard let doc = try? SwiftSoup.parse(html) else { return nil }
         let selectors = [

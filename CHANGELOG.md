@@ -27,3 +27,5 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   header `Origin` se enviaba con barra final y Rails respondía 422 (CSRF).
 - Controles de login nativos de tvOS (sin fondo/borde propios) y con
   `textContentType` para el autocompletado desde el iPhone.
+- Diagnóstico visible cuando el login falla sin mensaje del servidor
+  (`HTTP · ruta · título · form · remember`) y `Referer` como un navegador.
