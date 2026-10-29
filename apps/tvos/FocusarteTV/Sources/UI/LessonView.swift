@@ -114,7 +114,9 @@ struct LessonView: View {
                     .font(.system(size: 28, weight: .semibold))
 
                 ForEach(lesson.downloads) { download in
-                    NavigationLink(value: download) {
+                    NavigationLink {
+                        DownloadView(download: download)
+                    } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "arrow.down.doc")
                             Text(download.title)

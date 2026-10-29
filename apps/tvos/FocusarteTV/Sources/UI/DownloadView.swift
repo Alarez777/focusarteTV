@@ -20,7 +20,12 @@ struct DownloadView: View {
                     Button("Reintentar") { Task { await load() } }
                 }
             } else {
-                ProgressView()
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Descargando PDF…")
+                        .font(.system(size: 20))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .navigationTitle(download.title)

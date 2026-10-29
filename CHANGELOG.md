@@ -57,7 +57,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Tarjeta Up Next más a la derecha y más abajo (40 / 110).
 - El foco del carrusel sigue al auto-avance: al salir del player queda en la lección que terminó sonando.
 - El autoplay ya no se salta los PDF: si la lección siguiente es un post, cierra el player y abre el post.
-- Los links de "Descargas" ahora abren el visor de PDF (`navigationDestination(for: LessonDownload.self)`); antes no hacían nada.
+- Los links de "Descargas" abren el visor de PDF con un `NavigationLink` directo (sin depender del registro por valor) y muestran "Descargando PDF…" mientras cargan.
 - README: aviso de proyecto no oficial, estado actual, limitaciones conocidas y comandos de build/test al día.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
