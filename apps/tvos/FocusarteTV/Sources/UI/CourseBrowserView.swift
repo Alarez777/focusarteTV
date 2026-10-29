@@ -1,8 +1,6 @@
 import SwiftUI
 import FocusarteCore
 
-/// Un curso = una pestaña. Header con portada + intro, picker segmentado de
-/// bloques y carrusel del bloque seleccionado.
 struct CourseBrowserView: View {
     let course: Course
 
@@ -14,6 +12,7 @@ struct CourseBrowserView: View {
     @State private var errorMessage: String?
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
+    @State private var autoFocusTarget: String?
     @FocusState private var focusedLesson: String?
 
     var body: some View {
@@ -79,43 +78,44 @@ struct CourseBrowserView: View {
         }
     }
 
+    // MARK: - Header
+
     private func header(_ outline: CourseOutline) -> some View {
-        HStack(alignment: .top, spacing: 28) {
+        HStack(alignment: .top, spacing: 30) {
             CachedImage(url: course.imageURL) {
                 Rectangle()
                     .fill(Color.white.opacity(0.08))
             }
-            .frame(width: 320, height: 180)
+            .frame(width: 384, height: 216)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text(course.title)
                     .font(.system(size: 34, weight: .bold))
 
                 if let intro = outline.intro, !intro.isEmpty {
                     Text(intro)
-                        .font(.system(size: 16))
+                        .font(.system(size: 19))
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                HStack(spacing: 16) {
-                    ProgressView(value: Double(outline.percentComplete), total: 100)
-                        .progressViewStyle(.linear)
-                        .frame(maxWidth: 320)
+                ProgressView(value: Double(outline.percentComplete), total: 100)
+                    .progressViewStyle(.linear)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
 
-                    Text("\(outline.completedCount) de \(outline.allLessons.count) lecciones")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 4)
+                Text("\(outline.completedCount) de \(outline.allLessons.count) lecciones")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
-
-            Spacer(minLength: 0)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
+
+    // MARK: - Carrusel
 
     private func lessonCarousel(_ section: CourseSection) -> some View {
         ScrollViewReader { proxy in
@@ -141,12 +141,32 @@ struct CourseBrowserView: View {
                 .padding(.vertical, 12)
                 .padding(.horizontal, 8)
             }
-            .onChange(of: carouselTarget) { _, newValue in
-                guard let newValue else { return }
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    proxy.scrollTo(newValue, anchor: .center)
-                }
+            .defaultFocus($focusedLesson, carouselTarget)
+            .onAppear {
+                applyCarouselFocus(proxy)
             }
+            .onChange(of: carouselTarget) { _, _ in
+                applyCarouselFocus(proxy)
+            }
+        }
+    }
+
+    /// Scroll a la tarjeta y, si corresponde, recién ahí mover el foco.
+    private func applyCarouselFocus(_ proxy: ScrollViewProxy) {
+        guard let target = carouselTarget else { return }
+        let shouldFocus = autoFocusTarget == target
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 200_000_000)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(target, anchor: .center)
+            }
+
+            guard shouldFocus else { return }
+
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            focusedLesson = target
+            autoFocusTarget = nil
         }
     }
 
@@ -158,6 +178,8 @@ struct CourseBrowserView: View {
             set: { newValue in
                 selectedSectionID = newValue
                 focusedLesson = nil
+                autoFocusTarget = nil
+
                 if let section = outline.sections.first(where: { $0.id == newValue }) {
                     let first = section.lessons.first?.id ?? ""
                     carouselTarget = first
@@ -167,7 +189,6 @@ struct CourseBrowserView: View {
         )
     }
 
-    /// "Bloque 1 - Dos historias…" → "Bloque 1"; si no, el título corto.
     private func shortLabel(_ section: CourseSection) -> String {
         if let range = section.title.range(of: " - ") {
             let prefix = String(section.title[..<range.lowerBound])
@@ -192,8 +213,6 @@ struct CourseBrowserView: View {
 
     // MARK: - Miniaturas por prioridad
 
-    /// Actual → siguientes del bloque actual → bloque siguiente → uno atrás →
-    /// resto de los siguientes → bloques anteriores.
     private func applyPrefetchPlan(outline: CourseOutline, currentLessonID: String) {
         let sections = outline.sections
         guard let currentIndex = sections.firstIndex(where: { $0.id == selectedSectionID }) else {
@@ -244,10 +263,16 @@ struct CourseBrowserView: View {
 
     // MARK: - Carga y foco
 
+    private func initialFocusKey() -> String? {
+        let preferences = PlaybackPreferences.shared
+        guard preferences.lastCourseSlug == course.slug else { return nil }
+        return preferences.lastLessonID
+    }
+
     private func loadWithCache() async {
         if let cached = session.cachedOutline(for: course.slug) {
             outline = cached
-            configureFocus()
+            configureFocus(preferring: initialFocusKey())
         }
         await refresh()
     }
@@ -263,7 +288,7 @@ struct CourseBrowserView: View {
             }
             outline = fresh
             if !hadOutline {
-                configureFocus()
+                configureFocus(preferring: initialFocusKey())
             }
         } catch {
             if outline == nil {
@@ -298,13 +323,8 @@ struct CourseBrowserView: View {
         }
 
         carouselTarget = target.id
+        autoFocusTarget = target.id
         applyPrefetchPlan(outline: outline, currentLessonID: target.id)
-
-        // Primero se hace scroll a la tarjeta; recién después se mueve el foco.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            focusedLesson = target.id
-        }
     }
 
     private func isSame(_ a: CourseOutline, _ b: CourseOutline) -> Bool {

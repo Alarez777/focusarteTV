@@ -49,6 +49,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Miniaturas con prioridad: actual y siguientes del bloque → bloque siguiente →
   uno atrás → resto; mapa de posters persistido en UserDefaults.
 - Botón "Eliminar caché" en Configuración.
+- Header con imagen/descripción 20% más grandes y barra de progreso a todo el
+  ancho de la columna de texto.
+- Al abrir la app se selecciona la pestaña del último video reproducido y, dentro,
+  su bloque y capítulo.
 - Sin título duplicado ni email en el listado; el correo vive solo en
   Configuración.
 - Up Next: la cuenta regresiva arranca a los 5 s del final.
