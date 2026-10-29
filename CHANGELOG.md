@@ -51,7 +51,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Botón "Eliminar caché" en Configuración.
 - Header con imagen 580×326, título 40 pt, intro 26 pt (6 líneas) y contador de
   lecciones de 26 pt; barra con fondo gris oscuro para lo pendiente, 20 pt más
-  arriba que antes.
+  arriba que antes y porcentaje al final.
 - Logo Focusarte a 65 pt de alto, alineado arriba a la izquierda (offset -16).
 - Progreso por capítulo: barra de 9 pt superpuesta al ras de la parte inferior
   del poster, en vez de debajo del título.

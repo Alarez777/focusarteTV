@@ -115,20 +115,26 @@ struct CourseBrowserView: View {
     }
 
     private func courseProgressBar(_ outline: CourseOutline) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color(white: 0.22))
+        let percent = min(max(outline.percentComplete, 0), 100)
 
-                Capsule()
-                    .fill(Theme.accent)
-                    .frame(
-                        width: geometry.size.width
-                            * CGFloat(min(max(outline.percentComplete, 0), 100)) / 100
-                    )
+        return HStack(spacing: 16) {
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color(white: 0.22))
+
+                    Capsule()
+                        .fill(Theme.accent)
+                        .frame(width: geometry.size.width * CGFloat(percent) / 100)
+                }
             }
+            .frame(height: 9)
+
+            Text("\(percent)%")
+                .font(.system(size: 26, weight: .medium))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
         }
-        .frame(height: 9)
     }
 
     // MARK: - Carrusel
