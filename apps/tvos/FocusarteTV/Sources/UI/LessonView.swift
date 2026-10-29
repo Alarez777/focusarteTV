@@ -1,5 +1,4 @@
 import SwiftUI
-import AVFoundation
 import FocusarteCore
 
 struct LessonView: View {
@@ -16,7 +15,6 @@ struct LessonView: View {
     @State private var isUpdating = false
     @State private var errorMessage: String?
     @State private var presentedDownload: LessonDownload?
-    @State private var autoPlayHandled = false
     @FocusState private var playButtonFocused: Bool
 
     private let baseURL = URL(string: "https://www.focusarte.com")!
@@ -164,14 +162,6 @@ struct LessonView: View {
 
             if let video = loaded.video {
                 videoAsset = try await session.client.resolveVideo(mediaID: video.mediaID)
-            }
-
-            if route.autoPlay, !autoPlayHandled, target.id == route.summary.id {
-                autoPlayHandled = true
-                if videoAsset?.playbackURL != nil {
-                    startPlayback()
-                    return
-                }
             }
 
             if videoAsset != nil {

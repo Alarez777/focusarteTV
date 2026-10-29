@@ -318,7 +318,6 @@ struct CourseBrowserView: View {
         configureFocus(preferring: key)
         route = LessonRoute(
             summary: lesson,
-            autoPlay: false,
             courseSlug: course.slug,
             courseTitle: course.title,
             sectionTitle: section.title
@@ -330,7 +329,6 @@ struct CourseBrowserView: View {
         if session.lessonHasVideo(lesson.id) == false {
             route = LessonRoute(
                 summary: lesson,
-                autoPlay: false,
                 courseSlug: course.slug,
                 courseTitle: course.title,
                 sectionTitle: section.title
@@ -353,7 +351,6 @@ struct CourseBrowserView: View {
             if !started {
                 route = LessonRoute(
                     summary: lesson,
-                    autoPlay: false,
                     courseSlug: course.slug,
                     courseTitle: course.title,
                     sectionTitle: section.title

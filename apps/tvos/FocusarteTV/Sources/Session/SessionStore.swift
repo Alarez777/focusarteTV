@@ -326,15 +326,6 @@ final class SessionStore: ObservableObject {
         ImageStore.shared.clear()
     }
 
-    func reloadLibrary() async {
-        do {
-            courses = try await client.loadLibrary()
-            persistCookies()
-        } catch {
-            errorMessage = Self.message(for: error)
-        }
-    }
-
     private func attemptSignIn(email: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil

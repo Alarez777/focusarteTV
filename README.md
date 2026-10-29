@@ -19,7 +19,8 @@ App funcional, en desarrollo activo:
 - Biblioteca con una pestaña por curso: bloques, carrusel de lecciones y progreso.
 - Reproducción HLS a pantalla completa con PiP, autoplay y tarjeta Up Next.
 - Foco que sigue la lección actual y recuerda la posición de cada bloque.
-- Visor de PDFs para las descargas de cada lección (Core Graphics).
+- Visor de PDFs a pantalla completa para las descargas de cada lección (Core Graphics,
+  sin PDFKit): se abre desde el botón de descarga y Menú vuelve al post.
 - Cache de imágenes y precarga de miniaturas de todo el curso en segundo plano.
 
 ### Limitaciones conocidas

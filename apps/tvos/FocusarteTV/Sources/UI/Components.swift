@@ -1,32 +1,6 @@
 import SwiftUI
 import FocusarteCore
 
-struct ProgressBar: View {
-    let percent: Int
-
-    private var clamped: Int { min(max(percent, 0), 100) }
-
-    var body: some View {
-        HStack(spacing: 14) {
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.white.opacity(0.15))
-                    Capsule()
-                        .fill(Theme.accent)
-                        .frame(width: geometry.size.width * CGFloat(clamped) / 100)
-                }
-            }
-            .frame(height: 8)
-
-            Text("\(clamped)%")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
-    }
-}
-
 /// Tarjeta del carrusel de lecciones.
 struct LessonCard: View {
     let lesson: LessonSummary

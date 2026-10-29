@@ -6,11 +6,13 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-29
+
 ### Added
-- Scaffold del proyecto: app tvOS mínima en SwiftUI, proyecto XcodeGen y CI que publica un `.ipa` sin firmar en cada push.
+- App tvOS en SwiftUI, proyecto XcodeGen y CI que publica un `.ipa` sin firmar en cada push.
 - `scripts/fetch-ipa.sh` para bajar el artifact a `~/Descargas/ABDM/Movil`.
 - `docs/kajabi-protocol.md` con el protocolo verificado de Focusarte/Kajabi.
-- Núcleo `FocusarteCore`: cliente HTTP con cookies y CSRF, login, parsers de biblioteca/curso/lección, resolución de Wistia a HLS y reporte de progreso. Cubierto por 24 tests sobre fixtures reales anonimizados.
+- Núcleo `FocusarteCore`: cliente HTTP con cookies y CSRF, login, parsers de biblioteca/curso/lección, resolución de Wistia a HLS y reporte de progreso. Cubierto por 25 tests sobre fixtures reales anonimizados.
 - App: login con Keychain y re-login silencioso, "Mis Cursos", outline del curso con progreso, reproductor HLS, marcado de lección vista y visor de PDFs.
 - Ícono de app y Top Shelf con la marca Focusarte (capas Back/Middle/Front).
 - Cache de outlines en memoria (stale-while-revalidate): al reentrar a un curso se muestra al instante y se refresca en segundo plano.
@@ -18,8 +20,6 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - PiP nativo en tvOS: `allowsPictureInPicturePlayback`, delegate de `AVPlayerViewController` y `PlaybackManager` que reutiliza el player y lo restaura a pantalla completa al volver del PiP.
 - `UIBackgroundModes: audio` y `AVAudioSession(.playback)` para reproducción en segundo plano.
 - Metadatos del reproductor: `externalMetadata` (título, curso · bloque, carátula) y `MPNowPlayingInfoCenter` (lección / curso / bloque).
-
-### Added
 - PiP nativo con `PlayerHostViewController` retenido por `PlaybackManager`: el player y su delegate sobreviven al cover, así el restore a pantalla completa funciona aunque el video flote.
 - Subtítulo `"Curso · Bloque"` en la barra de transporte del player.
 - Autoplay de la siguiente lección con tarjeta Up Next (miniatura, título y cuenta regresiva) y acciones nativas Cancelar/Siguiente; al terminar el temporizador avanza sola.
