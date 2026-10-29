@@ -143,7 +143,8 @@ struct CourseBrowserView: View {
                         } label: {
                             LessonCard(
                                 lesson: lesson,
-                                posterURL: session.lessonPosterURL(for: lesson.id) ?? course.imageURL
+                                posterURL: session.lessonPosterURL(for: lesson.id) ?? course.imageURL,
+                                isFocused: focusedLesson == lesson.id
                             )
                         }
                         .buttonStyle(.card)

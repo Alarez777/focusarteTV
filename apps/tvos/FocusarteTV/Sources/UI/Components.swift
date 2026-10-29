@@ -31,6 +31,7 @@ struct ProgressBar: View {
 struct LessonCard: View {
     let lesson: LessonSummary
     let posterURL: URL?
+    var isFocused: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -53,7 +54,7 @@ struct LessonCard: View {
                                     )
                             }
                         }
-                        .frame(height: 6)
+                        .frame(height: 9)
                     }
                 }
                 .clipped()
@@ -72,11 +73,14 @@ struct LessonCard: View {
                 }
             }
 
-            Text(lesson.title)
-                .font(.system(size: 20, weight: .medium))
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-                .frame(width: 360, alignment: .leading)
+            MarqueeText(
+                text: lesson.title,
+                font: .system(size: 20, weight: .medium),
+                color: .white,
+                availableWidth: 350,
+                isActive: isFocused
+            )
+            .padding(.leading, 10)
         }
         .frame(width: 360, alignment: .leading)
     }
