@@ -49,7 +49,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Play/Pause del control remoto sobre una fila abre el video directamente.
 - "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
-- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, inputs de 44 pt con fondo gris oscuro propio del campo (para que el foco nativo quede del mismo tamaño), versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va al campo Correo sin abrir el teclado.
+- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, inputs nativos de tvOS con `borderStyle = .roundedRect` (una sola zona, sin fondo propio), versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va al campo Correo sin abrir el teclado.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed

@@ -24,49 +24,10 @@ final class LoginFieldDiagnostics: ObservableObject {
     }
 }
 
-/// `UITextField` que pide el foco en cuanto entra en la jerarquía de vistas y
-/// dibuja su propio fondo redondeado, para que el foco nativo de tvOS quede
-/// exactamente del mismo tamaño que el campo.
+/// `UITextField` que pide el foco en cuanto entra en la jerarquía de vistas.
 final class AutoFocusTextField: UITextField {
     var autoFocus = false
-
     private var requestedFocus = false
-    private let roundedBackground = UIView()
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        commonInit()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        commonInit()
-    }
-
-    private func commonInit() {
-        roundedBackground.backgroundColor = UIColor(white: 0.15, alpha: 1)
-        roundedBackground.layer.cornerRadius = 8
-        roundedBackground.layer.cornerCurve = .continuous
-        roundedBackground.isUserInteractionEnabled = false
-        insertSubview(roundedBackground, at: 0)
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        roundedBackground.frame = bounds
-    }
-
-    override func textRect(forBounds bounds: CGRect) -> CGRect {
-        bounds.insetBy(dx: 16, dy: 0)
-    }
-
-    override func editingRect(forBounds bounds: CGRect) -> CGRect {
-        textRect(forBounds: bounds)
-    }
-
-    override func placeholderRect(forBounds bounds: CGRect) -> CGRect {
-        textRect(forBounds: bounds)
-    }
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -99,7 +60,7 @@ struct LoginField: UIViewRepresentable {
         let field = AutoFocusTextField()
         field.autoFocus = autoFocus
         field.delegate = context.coordinator
-        field.borderStyle = .none
+        field.borderStyle = .roundedRect
         field.backgroundColor = .clear
         field.textColor = .white
         field.tintColor = .white
