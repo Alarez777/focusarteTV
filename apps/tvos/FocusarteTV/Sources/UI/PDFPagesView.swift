@@ -22,6 +22,8 @@ struct PDFPagesView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .focusable()
+                                .focusEffectDisabled(true)
                         }
                     }
                     .padding(60)

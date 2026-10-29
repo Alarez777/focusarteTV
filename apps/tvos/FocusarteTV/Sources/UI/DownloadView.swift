@@ -5,6 +5,7 @@ struct DownloadView: View {
     let download: LessonDownload
 
     @EnvironmentObject private var session: SessionStore
+    @Environment(\.dismiss) private var dismiss
 
     @State private var data: Data?
     @State private var errorMessage: String?
@@ -28,7 +29,9 @@ struct DownloadView: View {
                 }
             }
         }
-        .navigationTitle(download.title)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.ignoresSafeArea())
+        .onExitCommand { dismiss() }
         .task { await load() }
     }
 

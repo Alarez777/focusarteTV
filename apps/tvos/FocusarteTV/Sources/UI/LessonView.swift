@@ -15,6 +15,7 @@ struct LessonView: View {
     @State private var isCompleted = false
     @State private var isUpdating = false
     @State private var errorMessage: String?
+    @State private var presentedDownload: LessonDownload?
     @State private var autoPlayHandled = false
     @FocusState private var playButtonFocused: Bool
 
@@ -46,6 +47,9 @@ struct LessonView: View {
             .padding(80)
         }
         .task { await loadLesson(displayedSummary) }
+        .fullScreenCover(item: $presentedDownload) { download in
+            DownloadView(download: download)
+        }
         .onChange(of: playback.currentLessonKey) { _, newValue in
             followPlayback(newValue)
         }
@@ -114,8 +118,8 @@ struct LessonView: View {
                     .font(.system(size: 28, weight: .semibold))
 
                 ForEach(lesson.downloads) { download in
-                    NavigationLink {
-                        DownloadView(download: download)
+                    Button {
+                        presentedDownload = download
                     } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "arrow.down.doc")
