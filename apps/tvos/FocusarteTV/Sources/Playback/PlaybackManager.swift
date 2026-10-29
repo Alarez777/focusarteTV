@@ -12,7 +12,12 @@ import FocusarteCore
 final class PlaybackManager: ObservableObject {
     static let shared = PlaybackManager()
 
-    typealias NextProvider = @MainActor (String) async -> UpNextLesson?
+    enum NextItem {
+        case video(UpNextLesson)
+        case post(key: String)
+    }
+
+    typealias NextProvider = @MainActor (String) async -> NextItem?
 
     struct Session: Identifiable {
         let id = UUID()
@@ -30,6 +35,8 @@ final class PlaybackManager: ObservableObject {
     @Published private(set) var isPictureInPictureActive = false
     @Published private(set) var upNext: UpNextLesson?
     @Published private(set) var upNextCountdown: Int?
+    /// Lección de tipo post que sigue al video terminado; la UI la abre.
+    @Published private(set) var pendingPostKey: String?
     /// Lección que está sonando (sigue al auto-avance).
     @Published private(set) var currentLessonKey: String?
     /// Se incrementa después de reportar progreso, para que la UI refresque
@@ -40,6 +47,7 @@ final class PlaybackManager: ObservableObject {
     private var upNextCancelled = false
     private var resolvingNext = false
     private var ended = false
+    private var nextPostKey: String?
 
     private init() {}
 
@@ -83,9 +91,15 @@ final class PlaybackManager: ObservableObject {
         upNextCancelled = false
         resolvingNext = false
         ended = false
+        nextPostKey = nil
         isPictureInPictureActive = false
         currentLessonKey = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+    }
+
+    /// La UI ya abrió el post que seguía; se limpia la marca.
+    func clearPendingPost() {
+        pendingPostKey = nil
     }
 
     /// Llamado desde `dismantleUIViewController` cuando SwiftUI suelta el cover.
@@ -116,6 +130,9 @@ final class PlaybackManager: ObservableObject {
         courseSlug: String,
         nextProvider: NextProvider?
     ) {
+        pendingPostKey = nil
+        nextPostKey = nil
+
         let host = PlayerHostViewController()
         host.loadViewIfNeeded()
         host.configure(
@@ -199,9 +216,13 @@ final class PlaybackManager: ObservableObject {
             resolvingNext = false
 
             guard !upNextCancelled, !ended else { return }
-            if let next {
-                upNext = next
+            guard let next else { return }
+            switch next {
+            case .video(let video):
+                upNext = video
                 updateContextualActions()
+            case .post(let key):
+                nextPostKey = key
             }
         }
     }
@@ -251,6 +272,14 @@ final class PlaybackManager: ObservableObject {
             return
         }
 
+        // El siguiente es un post (PDF/texto): se cierra el player y la UI lo
+        // abre en su lugar.
+        if let key = nextPostKey {
+            pendingPostKey = key
+            stop()
+            return
+        }
+
         guard let session = active, let provider = session.nextProvider else {
             stop()
             return
@@ -258,9 +287,15 @@ final class PlaybackManager: ObservableObject {
 
         let key = session.key
         Task {
-            if let next = await provider(key) {
-                playNext(next)
-            } else {
+            guard let next = await provider(key) else {
+                stop()
+                return
+            }
+            switch next {
+            case .video(let video):
+                playNext(video)
+            case .post(let postKey):
+                pendingPostKey = postKey
                 stop()
             }
         }

@@ -253,20 +253,29 @@ final class SessionStore: ObservableObject {
         let client = self.client
 
         return { currentKey in
-            guard let index = flat.firstIndex(where: { $0.lesson.id == currentKey }) else {
+            guard let index = flat.firstIndex(where: { $0.lesson.id == currentKey }),
+                  index + 1 < flat.count else {
                 return nil
             }
 
-            let candidates = flat[(index + 1)...].prefix(4)
-            for candidate in candidates {
-                guard let lesson = try? await client.loadLesson(path: candidate.lesson.path),
-                      let video = lesson.video,
-                      let asset = try? await client.resolveVideo(mediaID: video.mediaID),
-                      let url = asset.playbackURL else {
-                    continue
-                }
+            // Solo mira la lección inmediatamente siguiente: si es un post se
+            // abre el post en vez de saltearlo.
+            let candidate = flat[index + 1]
+            guard let lesson = try? await client.loadLesson(path: candidate.lesson.path) else {
+                return nil
+            }
 
-                return UpNextLesson(
+            guard let video = lesson.video else {
+                return .post(key: lesson.id)
+            }
+
+            guard let asset = try? await client.resolveVideo(mediaID: video.mediaID),
+                  let url = asset.playbackURL else {
+                return nil
+            }
+
+            return .video(
+                UpNextLesson(
                     key: lesson.id,
                     url: url,
                     duration: asset.duration,
@@ -279,8 +288,7 @@ final class SessionStore: ObservableObject {
                         artworkURL: lesson.posterURL ?? asset.posterURL
                     )
                 )
-            }
-            return nil
+            )
         }
     }
 

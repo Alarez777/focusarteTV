@@ -55,6 +55,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Prefetch de miniaturas: una cola única que carga todo el curso en segundo plano (antes se cancelaba al cambiar el foco y solo cargaba el bloque). El tipo (video/PDF) se guarda en UserDefaults y sobrevive al reinicio.
 - Cada bloque recuerda la última lección vista y, al volver, el carrusel se desplaza ahí sin mover el foco. Los bloques nunca visitados quedan al inicio.
 - Tarjeta Up Next más a la derecha y más abajo (40 / 110).
+- El foco del carrusel sigue al auto-avance: al salir del player queda en la lección que terminó sonando.
+- El autoplay ya no se salta los PDF: si la lección siguiente es un post, cierra el player y abre el post.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed

@@ -60,6 +60,14 @@ struct CourseBrowserView: View {
                 applyPrefetchPlan(outline: outline, currentLessonID: newValue)
             }
         }
+        .onChange(of: playback.currentLessonKey) { _, newValue in
+            guard let newValue, newValue != route?.summary.id else { return }
+            configureFocus(preferring: newValue)
+        }
+        .onChange(of: playback.pendingPostKey) { _, newValue in
+            guard let newValue else { return }
+            openPost(key: newValue)
+        }
     }
 
     private func content(_ outline: CourseOutline) -> some View {
@@ -294,6 +302,28 @@ struct CourseBrowserView: View {
     }
 
     // MARK: - Navegación
+
+    /// Abre el post que sigue a un video cuando el autoplay se detiene en un PDF.
+    private func openPost(key: String) {
+        defer { playback.clearPendingPost() }
+
+        guard let outline,
+              let lesson = outline.allLessons.first(where: { $0.id == key }),
+              let section = outline.sections.first(where: { section in
+                  section.lessons.contains { $0.id == key }
+              }) else {
+            return
+        }
+
+        configureFocus(preferring: key)
+        route = LessonRoute(
+            summary: lesson,
+            autoPlay: false,
+            courseSlug: course.slug,
+            courseTitle: course.title,
+            sectionTitle: section.title
+        )
+    }
 
     private func open(_ lesson: LessonSummary, section: CourseSection) {
         // PDF/texto ya identificado: abrir el post directo.
