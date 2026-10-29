@@ -31,7 +31,7 @@ struct MainTabView: View {
             Image("FocusarteWordmark")
                 .resizable()
                 .scaledToFit()
-                .frame(height: 130)
+                .frame(height: 65)
                 .padding(.leading, 60)
                 .allowsHitTesting(false)
         }

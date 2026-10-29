@@ -86,17 +86,17 @@ struct CourseBrowserView: View {
                 Rectangle()
                     .fill(Color.white.opacity(0.08))
             }
-            .frame(width: 644, height: 362)
+            .frame(width: 580, height: 326)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 12) {
                 Text(course.title)
-                    .font(.system(size: 44, weight: .bold))
+                    .font(.system(size: 40, weight: .bold))
 
                 if let intro = outline.intro, !intro.isEmpty {
                     Text(intro)
-                        .font(.system(size: 29))
+                        .font(.system(size: 26))
                         .foregroundStyle(.secondary)
                         .lineLimit(6)
                         .fixedSize(horizontal: false, vertical: true)
@@ -106,7 +106,7 @@ struct CourseBrowserView: View {
                     .padding(.top, 6)
 
                 Text("\(outline.completedCount) de \(outline.allLessons.count) lecciones")
-                    .font(.system(size: 29))
+                    .font(.system(size: 26))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -127,7 +127,7 @@ struct CourseBrowserView: View {
                     )
             }
         }
-        .frame(height: 10)
+        .frame(height: 9)
     }
 
     // MARK: - Carrusel

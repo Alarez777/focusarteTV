@@ -49,9 +49,9 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Miniaturas con prioridad: actual y siguientes del bloque → bloque siguiente →
   uno atrás → resto; mapa de posters persistido en UserDefaults.
 - Botón "Eliminar caché" en Configuración.
-- Header con imagen 644×362, título 44 pt, intro 29 pt (6 líneas) y contador de
-  lecciones de 29 pt; barra con fondo gris oscuro para lo pendiente.
-- Logo Focusarte a 130 pt de alto, alineado arriba a la izquierda.
+- Header con imagen 580×326, título 40 pt, intro 26 pt (6 líneas) y contador de
+  lecciones de 26 pt; barra con fondo gris oscuro para lo pendiente.
+- Logo Focusarte a 65 pt de alto, alineado arriba a la izquierda.
 - Perfil de Configuración con círculo de 180, inicial 72 y email 28 pt.
 - Intro por curso desde `#section-product_body` (Historia y Thyssen tienen la
   suya) y sin el prefijo genérico del sitio.
