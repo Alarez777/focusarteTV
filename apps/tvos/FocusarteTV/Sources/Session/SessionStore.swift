@@ -39,6 +39,7 @@ final class SessionStore: ObservableObject {
     private var sessionGeneration = 0
     private static let emailAccount = "focusarte.email"
     private static let posterCacheKey = "lesson_poster_urls"
+    private static let videoFlagsKey = "lesson_video_flags"
     private static let passwordAccount = "focusarte.password"
     private static let cookiesAccount = "focusarte.cookies"
 
@@ -48,6 +49,9 @@ final class SessionStore: ObservableObject {
 
         if let stored = UserDefaults.standard.dictionary(forKey: Self.posterCacheKey) as? [String: String] {
             posterCache = stored.compactMapValues { URL(string: $0) }
+        }
+        if let stored = UserDefaults.standard.dictionary(forKey: Self.videoFlagsKey) as? [String: Bool] {
+            lessonVideo = stored
         }
     }
 
@@ -173,7 +177,13 @@ final class SessionStore: ObservableObject {
                     posterTasks.remove(id)
                 }
             }
+
+            persistVideoFlags()
         }
+    }
+
+    private func persistVideoFlags() {
+        UserDefaults.standard.set(lessonVideo, forKey: Self.videoFlagsKey)
     }
 
     // MARK: - Reproducción
@@ -304,6 +314,7 @@ final class SessionStore: ObservableObject {
         prefetchWorker = nil
         prefetchQueue.removeAll()
         UserDefaults.standard.removeObject(forKey: Self.posterCacheKey)
+        UserDefaults.standard.removeObject(forKey: Self.videoFlagsKey)
         ImageStore.shared.clear()
     }
 

@@ -156,7 +156,7 @@ struct CourseBrowserView: View {
                 LazyHStack(spacing: 24) {
                     ForEach(section.lessons) { lesson in
                         Button {
-                            open(lesson, section: section, autoPlay: false)
+                            open(lesson, section: section)
                         } label: {
                             LessonCard(
                                 lesson: lesson,
@@ -168,7 +168,7 @@ struct CourseBrowserView: View {
                         .focused($focusedLesson, equals: lesson.id)
                         .id(lesson.id)
                         .onPlayPauseCommand {
-                            open(lesson, section: section, autoPlay: true)
+                            open(lesson, section: section)
                         }
                     }
                 }
@@ -216,29 +216,18 @@ struct CourseBrowserView: View {
 
                 let target = preferredLessonID(in: newValue, outline: outline)
                 carouselTarget = target
-                autoFocusTarget = target
                 applyPrefetchPlan(outline: outline, currentLessonID: target)
             }
         )
     }
 
-    /// Última lección vista en el bloque; si nunca se visitó, la que está
-    /// sonando o la primera sin completar.
+    /// Última lección vista en el bloque; si nunca se visitó, la primera.
     private func preferredLessonID(in sectionID: String, outline: CourseOutline) -> String {
         let lessons = outline.sections.first(where: { $0.id == sectionID })?.lessons ?? []
 
         if let remembered = sectionPositions[sectionID],
            lessons.contains(where: { $0.id == remembered }) {
             return remembered
-        }
-
-        if let current = playback.currentLessonKey,
-           lessons.contains(where: { $0.id == current }) {
-            return current
-        }
-
-        if let pending = lessons.first(where: { !$0.isCompleted }) {
-            return pending.id
         }
 
         return lessons.first?.id ?? ""
@@ -306,40 +295,41 @@ struct CourseBrowserView: View {
 
     // MARK: - Navegación
 
-    private func open(_ lesson: LessonSummary, section: CourseSection, autoPlay: Bool) {
-        // Video ya identificado: reproducir sin pasar por el post.
-        if session.lessonHasVideo(lesson.id) == true {
-            isOpeningLesson = true
-            Task { @MainActor in
-                let started = await session.startPlayback(
-                    summary: lesson,
-                    sectionTitle: section.title,
-                    courseTitle: course.title,
-                    courseSlug: course.slug
-                )
-                isOpeningLesson = false
-
-                if !started {
-                    route = LessonRoute(
-                        summary: lesson,
-                        autoPlay: true,
-                        courseSlug: course.slug,
-                        courseTitle: course.title,
-                        sectionTitle: section.title
-                    )
-                }
-            }
+    private func open(_ lesson: LessonSummary, section: CourseSection) {
+        // PDF/texto ya identificado: abrir el post directo.
+        if session.lessonHasVideo(lesson.id) == false {
+            route = LessonRoute(
+                summary: lesson,
+                autoPlay: false,
+                courseSlug: course.slug,
+                courseTitle: course.title,
+                sectionTitle: section.title
+            )
             return
         }
 
-        let unknownVideo = session.lessonHasVideo(lesson.id) == nil
-        route = LessonRoute(
-            summary: lesson,
-            autoPlay: autoPlay || unknownVideo,
-            courseSlug: course.slug,
-            courseTitle: course.title,
-            sectionTitle: section.title
-        )
+        // Video (o tipo todavía desconocido): resolver y, si no hay video,
+        // recién ahí abrir el post.
+        isOpeningLesson = true
+        Task { @MainActor in
+            let started = await session.startPlayback(
+                summary: lesson,
+                sectionTitle: section.title,
+                courseTitle: course.title,
+                courseSlug: course.slug
+            )
+            isOpeningLesson = false
+
+            if !started {
+                route = LessonRoute(
+                    summary: lesson,
+                    autoPlay: false,
+                    courseSlug: course.slug,
+                    courseTitle: course.title,
+                    sectionTitle: section.title
+                )
+            }
+        }
     }
 
     // MARK: - Carga y foco
