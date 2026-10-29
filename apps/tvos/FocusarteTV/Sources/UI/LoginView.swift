@@ -42,7 +42,7 @@ struct LoginView: View {
 
             VStack(alignment: .leading, spacing: 26) {
                 fieldRow(title: "Correo") {
-                    TextField("", text: $email)
+                    TextField("Correo electrónico", text: $email)
                         .textContentType(.username)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -53,7 +53,7 @@ struct LoginView: View {
                 }
 
                 fieldRow(title: "Contraseña") {
-                    SecureField("", text: $password)
+                    SecureField("Contraseña", text: $password)
                         .textContentType(.password)
                         .submitLabel(.continue)
                         .focused($focused, equals: .password)
