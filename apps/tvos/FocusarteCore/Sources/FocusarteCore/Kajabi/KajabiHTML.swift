@@ -158,9 +158,17 @@ public enum KajabiHTML {
         }
         flush()
 
+        var intro: String?
+        if let meta = selectFirst(doc, "meta[name='description']") {
+            let content = (try? meta.attr("content")) ?? ""
+            let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { intro = trimmed }
+        }
+
         return CourseOutline(
             slug: slug,
             title: pageTitle.isEmpty ? slug : pageTitle,
+            intro: intro,
             sections: sections
         )
     }

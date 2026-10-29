@@ -4,6 +4,8 @@ struct SettingsView: View {
     @EnvironmentObject private var session: SessionStore
     @ObservedObject private var preferences = PlaybackPreferences.shared
 
+    @State private var cacheCleared = false
+
     var body: some View {
         NavigationStack {
             Form {
@@ -12,6 +14,19 @@ struct SettingsView: View {
                         "Reproducir automáticamente la siguiente lección",
                         isOn: $preferences.autoplayNextLesson
                     )
+                }
+
+                Section("Almacenamiento") {
+                    Button("Eliminar caché") {
+                        session.clearCaches()
+                        cacheCleared = true
+                    }
+
+                    if cacheCleared {
+                        Text("Caché eliminada")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Section("Cuenta") {

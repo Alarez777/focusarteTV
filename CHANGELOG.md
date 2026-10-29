@@ -44,7 +44,11 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   nativo), sin sub-pestañas ni botones custom.
 - Dentro de cada curso, un **Picker segmentado de bloques** (etiquetas
   "Bloque N") con el nombre completo debajo y **un solo carrusel** para el
-  bloque elegido; progreso con `ProgressView` nativo.
+  bloque elegido.
+- Header del curso con portada, intro y progreso nativo.
+- Miniaturas con prioridad: actual y siguientes del bloque → bloque siguiente →
+  uno atrás → resto; mapa de posters persistido en UserDefaults.
+- Botón "Eliminar caché" en Configuración.
 - Sin título duplicado ni email en el listado; el correo vive solo en
   Configuración.
 - Up Next: la cuenta regresiva arranca a los 5 s del final.

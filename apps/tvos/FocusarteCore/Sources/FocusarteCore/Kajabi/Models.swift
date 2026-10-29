@@ -49,11 +49,14 @@ public struct LessonSummary: Identifiable, Hashable, Sendable {
 public struct CourseOutline: Sendable {
     public let slug: String
     public let title: String
+    /// Intro del curso, tomada del meta description del producto.
+    public let intro: String?
     public let sections: [CourseSection]
 
-    public init(slug: String, title: String, sections: [CourseSection]) {
+    public init(slug: String, title: String, intro: String? = nil, sections: [CourseSection]) {
         self.slug = slug
         self.title = title
+        self.intro = intro
         self.sections = sections
     }
 

@@ -23,12 +23,17 @@ final class SessionStore: ObservableObject {
     private var posterCache: [String: URL] = [:]
     private var posterTasks: Set<String> = []
     private static let emailAccount = "focusarte.email"
+    private static let posterCacheKey = "lesson_poster_urls"
     private static let passwordAccount = "focusarte.password"
     private static let cookiesAccount = "focusarte.cookies"
 
     init(client: KajabiClient = KajabiClient(), keychain: KeychainStore = KeychainStore()) {
         self.client = client
         self.keychain = keychain
+
+        if let stored = UserDefaults.standard.dictionary(forKey: Self.posterCacheKey) as? [String: String] {
+            posterCache = stored.compactMapValues { URL(string: $0) }
+        }
     }
 
     /// Restaura la sesión al arrancar: primero cookies guardadas, después
@@ -70,9 +75,7 @@ final class SessionStore: ObservableObject {
         keychain.delete(Self.passwordAccount)
         courses = []
         signedInEmail = ""
-        outlineCache.removeAll()
-        posterCache.removeAll()
-        posterTasks.removeAll()
+        clearCaches()
         state = .signedOut
     }
 
@@ -97,10 +100,19 @@ final class SessionStore: ObservableObject {
         posterCache[lessonID]
     }
 
-    /// Trae los posters de las lecciones indicadas (máximo 3 requests en vuelo).
-    /// El outline de Kajabi no incluye imágenes por lección: hay que leer cada
-    /// página para obtener el `stillUrl`.
-    func prefetchPosters(for lessons: [LessonSummary]) async {
+    private var prefetchGeneration = 0
+
+    /// Trae posters en el orden de prioridad indicado. Cada llamada invalida
+    /// la anterior: si el usuario cambia de bloque, manda el nuevo orden.
+    func prefetchPosters(ordered lessons: [LessonSummary]) {
+        prefetchGeneration += 1
+        let generation = prefetchGeneration
+        Task {
+            await runPrefetch(lessons, generation: generation)
+        }
+    }
+
+    private func runPrefetch(_ lessons: [LessonSummary], generation: Int) async {
         let missing = lessons.filter {
             posterCache[$0.id] == nil && !posterTasks.contains($0.id)
         }
@@ -128,52 +140,38 @@ final class SessionStore: ObservableObject {
             while let (id, url) = await group.next() {
                 if let url {
                     posterCache[id] = url
+                    persistPosterCache()
                 }
                 posterTasks.remove(id)
 
-                if index < missing.count {
-                    let lesson = missing[index]
-                    index += 1
-                    group.addTask {
-                        let parsed = try? await client.loadLesson(path: lesson.path)
-                        return (lesson.id, parsed?.posterURL)
-                    }
+                guard generation == prefetchGeneration else { continue }
+                guard index < missing.count else { continue }
+
+                let lesson = missing[index]
+                index += 1
+                group.addTask {
+                    let parsed = try? await client.loadLesson(path: lesson.path)
+                    return (lesson.id, parsed?.posterURL)
                 }
             }
         }
     }
 
-    func reloadLibrary() async {
-        do {
-            courses = try await client.loadLibrary()
-            persistCookies()
-        } catch {
-            errorMessage = Self.message(for: error)
-        }
+    private func persistPosterCache() {
+        UserDefaults.standard.set(
+            posterCache.mapValues(\.absoluteString),
+            forKey: Self.posterCacheKey
+        )
     }
 
-    private func attemptSignIn(email: String, password: String) async -> Bool {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-
-        do {
-            try await client.signIn(email: email, password: password)
-            let loaded = try await client.loadLibrary()
-
-            courses = loaded
-            signedInEmail = email
-
-            keychain.saveString(email, Self.emailAccount)
-            keychain.saveString(password, Self.passwordAccount)
-            persistCookies()
-
-            state = .signedIn
-            return true
-        } catch {
-            errorMessage = Self.message(for: error)
-            return false
-        }
+    /// Borra outlines, posters en memoria, el mapa persistido y las imágenes.
+    func clearCaches() {
+        outlineCache.removeAll()
+        posterCache.removeAll()
+        posterTasks.removeAll()
+        prefetchGeneration += 1
+        UserDefaults.standard.removeObject(forKey: Self.posterCacheKey)
+        ImageStore.shared.clear()
     }
 
     private func persistCookies() {

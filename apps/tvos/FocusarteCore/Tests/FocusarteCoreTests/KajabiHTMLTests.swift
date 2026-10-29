@@ -41,6 +41,13 @@ final class KajabiHTMLTests: XCTestCase {
         XCTAssertEqual(firstLesson.id, "2159073161")
     }
 
+    func testCourseIntroFromMetaDescription() throws {
+        let html = try Fixture.text("course.html")
+        let outline = try KajabiHTML.parseCourse(html, slug: "historia-del-arte-clasico")
+        XCTAssertNotNil(outline.intro)
+        XCTAssertTrue(outline.intro?.contains("pirámides") ?? false, "intro: \(outline.intro ?? "nil")")
+    }
+
     func testLessonWithVideo() throws {
         let html = try Fixture.text("lesson-video.html")
         let path = "/products/historia-del-arte-clasico/categories/2150657000/posts/2159073149"

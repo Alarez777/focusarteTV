@@ -33,6 +33,11 @@ final class ImageStore: @unchecked Sendable {
         memory.object(forKey: url as NSURL)
     }
 
+    func clear() {
+        memory.removeAllObjects()
+        cache.removeAllCachedResponses()
+    }
+
     func image(for url: URL) async -> UIImage? {
         if let cached = cachedImage(for: url) {
             return cached
