@@ -5,14 +5,15 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var emailFocused = false
-    @State private var passwordFocused = false
 
     var body: some View {
         HStack(spacing: 90) {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Focusarte")
-                    .font(.system(size: 84, weight: .bold, design: .serif))
+            VStack(alignment: .leading, spacing: 24) {
+                Image("FocusarteWordmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 150)
+                    .allowsHitTesting(false)
 
                 Text("Historia del Arte Clásico")
                     .font(.system(size: 30))
@@ -22,34 +23,36 @@ struct LoginView: View {
                     .font(.system(size: 22))
                     .foregroundStyle(.secondary)
                     .padding(.top, 10)
+
+                Spacer(minLength: 0)
+
+                Text(Self.versionLabel)
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 30) {
-                LoginField(
-                    placeholder: "Email",
-                    text: $email,
-                    contentType: .username,
-                    keyboardType: .emailAddress,
-                    returnKeyType: .next,
-                    onFocusChange: { emailFocused = $0 }
-                )
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(fieldBackground(emailFocused))
+            VStack(alignment: .leading, spacing: 26) {
+                fieldRow(title: "Usuario") {
+                    LoginField(
+                        placeholder: "",
+                        text: $email,
+                        contentType: .username,
+                        keyboardType: .emailAddress,
+                        returnKeyType: .next
+                    )
+                }
 
-                LoginField(
-                    placeholder: "Contraseña",
-                    text: $password,
-                    isSecure: true,
-                    contentType: .password,
-                    returnKeyType: .go,
-                    onSubmit: submit,
-                    onFocusChange: { passwordFocused = $0 }
-                )
-                .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(fieldBackground(passwordFocused))
+                fieldRow(title: "Contraseña") {
+                    LoginField(
+                        placeholder: "",
+                        text: $password,
+                        isSecure: true,
+                        contentType: .password,
+                        returnKeyType: .continue,
+                        onSubmit: submit
+                    )
+                }
 
                 if let error = session.errorMessage {
                     Text(error)
@@ -58,7 +61,7 @@ struct LoginView: View {
                 }
 
                 HStack(spacing: 24) {
-                    Button("Entrar") {
+                    Button("Iniciar sesión") {
                         submit()
                     }
                     .disabled(session.isLoading)
@@ -67,21 +70,28 @@ struct LoginView: View {
                         ProgressView()
                     }
                 }
-
-                Text(Self.versionLabel)
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 8)
+                .padding(.top, 4)
             }
-            .frame(width: 600)
+            .frame(width: 720)
         }
         .padding(90)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func fieldBackground(_ focused: Bool) -> some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color.white.opacity(focused ? 0.16 : 0.06))
+    @ViewBuilder
+    private func fieldRow<Field: View>(
+        title: String,
+        @ViewBuilder field: () -> Field
+    ) -> some View {
+        HStack(spacing: 28) {
+            Text(title)
+                .font(.system(size: 26))
+                .foregroundStyle(.secondary)
+                .frame(width: 150, alignment: .leading)
+
+            field()
+                .frame(height: 44)
+        }
     }
 
     private func submit() {

@@ -49,8 +49,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Play/Pause del control remoto sobre una fila abre el video directamente.
 - "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
+- Login: wordmark de Focusarte en lugar del título serif, etiquetas "Usuario" y "Contraseña" a la izquierda, inputs compactos sin borde, versión abajo a la izquierda y botón "Iniciar sesión".
 
 ### Fixed
+- AutoFill seguía sin llenar: `LoginField` asignaba el valor viejo del binding en cada re-render y pisaba el texto que insertaba el sistema. Ahora solo escribe el texto cuando el campo no tiene foco.
 - AutoFill desde el iPhone: el login usa `LoginField` (un `UITextField` con `textDidChange`) en vez de los campos de SwiftUI, que en tvOS no reflejaban el texto insertado por el gestor de contraseñas.
 - Keychain: los ítems ahora son `AfterFirstUnlockThisDeviceOnly` (no salen del dispositivo), se guardan sin sincronizar con iCloud Keychain, con update en lugar de delete+add y `OSStatus` verificado.
 - Cerrar sesión podía dejar cookies en Keychain si una escritura estaba en vuelo; ahora se invalida por generación de sesión.

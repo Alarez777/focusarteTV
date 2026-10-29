@@ -15,7 +15,6 @@ struct LoginField: UIViewRepresentable {
     var keyboardType: UIKeyboardType = .default
     var returnKeyType: UIReturnKeyType = .default
     var onSubmit: () -> Void = {}
-    var onFocusChange: (Bool) -> Void = { _ in }
 
     func makeUIView(context: Context) -> UITextField {
         let field = UITextField()
@@ -23,8 +22,8 @@ struct LoginField: UIViewRepresentable {
         field.borderStyle = .none
         field.backgroundColor = .clear
         field.textColor = .white
-        field.tintColor = UIColor(Theme.accent)
-        field.font = UIFont.preferredFont(forTextStyle: .body)
+        field.tintColor = .white
+        field.font = .systemFont(ofSize: 26)
         field.autocorrectionType = .no
         field.autocapitalizationType = .none
         field.spellCheckingType = .no
@@ -53,7 +52,10 @@ struct LoginField: UIViewRepresentable {
     func updateUIView(_ field: UITextField, context: Context) {
         context.coordinator.parent = self
 
-        if field.text != text {
+        // Con el campo enfocado el texto manda el `UITextField`: el usuario y
+        // AutoFill escriben ahí y el binding se sincroniza por notificaciones.
+        // Si acá se asignara el valor viejo del binding, se borraría lo escrito.
+        if !field.isFirstResponder, field.text != text {
             field.text = text
         }
         // Cambiar `isSecureTextEntry` en cada update borra el texto en curso.
@@ -104,14 +106,6 @@ struct LoginField: UIViewRepresentable {
         func textFieldShouldReturn(_ field: UITextField) -> Bool {
             parent.onSubmit()
             return true
-        }
-
-        func textFieldDidBeginEditing(_ field: UITextField) {
-            parent.onFocusChange(true)
-        }
-
-        func textFieldDidEndEditing(_ field: UITextField) {
-            parent.onFocusChange(false)
         }
 
         private func sync(_ field: UITextField) {
