@@ -75,6 +75,9 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 
 ### Fixed
+- Ícono de la app: las capas Back del brand asset no tenían canal alfa y tvOS
+  las descartaba, así que el ícono se veía blanco en el app switcher (solo
+  quedaba el wordmark blanco sobre fondo blanco). Ahora exportan RGBA opaco.
 - El refresco del curso podía leer progreso viejo antes de que terminara el
   reporte: ahora espera `progressRevision`.
 - Después del auto-avance, el post y el foco siguen a la lección que realmente
