@@ -174,6 +174,39 @@ final class SessionStore: ObservableObject {
         ImageStore.shared.clear()
     }
 
+    func reloadLibrary() async {
+        do {
+            courses = try await client.loadLibrary()
+            persistCookies()
+        } catch {
+            errorMessage = Self.message(for: error)
+        }
+    }
+
+    private func attemptSignIn(email: String, password: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            try await client.signIn(email: email, password: password)
+            let loaded = try await client.loadLibrary()
+
+            courses = loaded
+            signedInEmail = email
+
+            keychain.saveString(email, Self.emailAccount)
+            keychain.saveString(password, Self.passwordAccount)
+            persistCookies()
+
+            state = .signedIn
+            return true
+        } catch {
+            errorMessage = Self.message(for: error)
+            return false
+        }
+    }
+
     private func persistCookies() {
         Task { [weak self] in
             guard let self else { return }
