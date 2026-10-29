@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject private var preferences = PlaybackPreferences.shared
 
     @State private var cacheCleared = false
+    @State private var cacheBytes = 0
 
     var body: some View {
         NavigationStack {
@@ -17,8 +18,9 @@ struct SettingsView: View {
                 }
 
                 Section("Almacenamiento") {
-                    Button("Eliminar caché") {
+                    Button(cacheButtonTitle) {
                         session.clearCaches()
+                        cacheBytes = 0
                         cacheCleared = true
                     }
 
@@ -44,7 +46,16 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Configuración")
+            .onAppear {
+                cacheBytes = session.cacheSizeBytes
+            }
         }
+    }
+
+    private var cacheButtonTitle: String {
+        guard cacheBytes > 0 else { return "Eliminar caché" }
+        let size = ByteCountFormatter.string(fromByteCount: Int64(cacheBytes), countStyle: .file)
+        return "Eliminar caché (\(size))"
     }
 
     private static var versionLabel: String {

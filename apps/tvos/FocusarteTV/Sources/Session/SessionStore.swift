@@ -164,6 +164,18 @@ final class SessionStore: ObservableObject {
         )
     }
 
+    /// Tamaño aproximado de lo que liberaría "Eliminar caché".
+    var cacheSizeBytes: Int {
+        let images = ImageStore.shared.cacheBytes
+        let mapBytes: Int
+        if let stored = UserDefaults.standard.dictionary(forKey: Self.posterCacheKey) as? [String: String] {
+            mapBytes = stored.reduce(0) { $0 + $1.key.utf8.count + $1.value.utf8.count }
+        } else {
+            mapBytes = 0
+        }
+        return images + mapBytes
+    }
+
     /// Borra outlines, posters en memoria, el mapa persistido y las imágenes.
     func clearCaches() {
         outlineCache.removeAll()

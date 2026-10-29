@@ -33,6 +33,11 @@ final class ImageStore: @unchecked Sendable {
         memory.object(forKey: url as NSURL)
     }
 
+    /// Bytes que ocupa la cache de red (disco + memoria).
+    var cacheBytes: Int {
+        cache.currentDiskUsage + cache.currentMemoryUsage
+    }
+
     func clear() {
         memory.removeAllObjects()
         cache.removeAllCachedResponses()

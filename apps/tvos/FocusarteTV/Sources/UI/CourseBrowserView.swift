@@ -86,7 +86,7 @@ struct CourseBrowserView: View {
                 Rectangle()
                     .fill(Color.white.opacity(0.08))
             }
-            .frame(width: 384, height: 216)
+            .frame(width: 460, height: 259)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
@@ -96,7 +96,7 @@ struct CourseBrowserView: View {
 
                 if let intro = outline.intro, !intro.isEmpty {
                     Text(intro)
-                        .font(.system(size: 19))
+                        .font(.system(size: 22))
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
