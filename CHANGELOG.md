@@ -53,7 +53,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed
-- Diagnóstico temporal en el login: cuenta los cambios del correo y la contraseña (`EV`/`PV`), muestra el correo recibido y la cantidad de caracteres, para saber si AutoFill entrega o no el texto.
+- Aviso sutil en el login: el relleno automático de contraseñas no está disponible en tvOS, se sugiere copiar y pegar desde el iPhone. Explicación en `docs/login-autofill.md`.
 - Keychain: los ítems ahora son `AfterFirstUnlockThisDeviceOnly` (no salen del dispositivo), se guardan sin sincronizar con iCloud Keychain, con update en lugar de delete+add y `OSStatus` verificado.
 - Cerrar sesión podía dejar cookies en Keychain si una escritura estaba en vuelo; ahora se invalida por generación de sesión.
 - Ícono de la app: las capas Back del brand asset no tenían canal alfa y tvOS las descartaba, así que el ícono se veía blanco en el app switcher (solo quedaba el wordmark blanco sobre fondo blanco). Ahora exportan RGBA opaco.

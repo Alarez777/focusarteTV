@@ -5,8 +5,6 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
-    @State private var emailChanges = 0
-    @State private var passwordChanges = 0
 
     private enum Field: Hashable {
         case email
@@ -52,7 +50,6 @@ struct LoginView: View {
                         .submitLabel(.next)
                         .focused($focused, equals: .email)
                         .onSubmit { focused = .password }
-                        .onChange(of: email) { _, _ in emailChanges += 1 }
                 }
 
                 fieldRow(title: "Contraseña") {
@@ -61,7 +58,6 @@ struct LoginView: View {
                         .submitLabel(.continue)
                         .focused($focused, equals: .password)
                         .onSubmit { submit() }
-                        .onChange(of: password) { _, _ in passwordChanges += 1 }
                 }
 
                 if let error = session.errorMessage {
@@ -82,9 +78,11 @@ struct LoginView: View {
                 }
                 .padding(.top, 4)
 
-                Text("EV=\(emailChanges) · E=\"\(emailPreview)\" · PV=\(passwordChanges) · P=\(password.count)")
-                    .font(.system(size: 14, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                Text("El relleno automático de contraseñas no está disponible en tvOS para esta app. Copiá la contraseña desde tu gestor y pegala con el teclado del iPhone.")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(2)
+                    .padding(.top, 4)
             }
             .frame(width: 720)
         }
@@ -107,11 +105,6 @@ struct LoginView: View {
             field()
                 .font(.system(size: 26))
         }
-    }
-
-    private var emailPreview: String {
-        guard !email.isEmpty else { return "" }
-        return email.count > 24 ? String(email.prefix(24)) + "…" : email
     }
 
     private func submit() {
