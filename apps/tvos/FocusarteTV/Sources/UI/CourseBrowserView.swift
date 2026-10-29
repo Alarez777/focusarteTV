@@ -1,7 +1,8 @@
 import SwiftUI
 import FocusarteCore
 
-/// Un curso = una pestaña. Dentro, una shelf por bloque (patrón nativo de tvOS).
+/// Un curso = una pestaña. Dentro, un picker segmentado de bloques y el
+/// carrusel de lecciones del bloque seleccionado.
 struct CourseBrowserView: View {
     let course: Course
 
@@ -11,7 +12,7 @@ struct CourseBrowserView: View {
     @State private var outline: CourseOutline?
     @State private var route: LessonRoute?
     @State private var errorMessage: String?
-    @State private var scrollTarget: String?
+    @State private var selectedSectionID: String = ""
     @FocusState private var focusedLesson: String?
 
     var body: some View {
@@ -43,36 +44,37 @@ struct CourseBrowserView: View {
     }
 
     private func content(_ outline: CourseOutline) -> some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 44) {
-                    progressLine(outline)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                progressLine(outline)
 
+                Picker("Bloque", selection: $selectedSectionID) {
                     ForEach(outline.sections) { section in
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text(section.title)
-                                .font(.system(size: 26, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.9))
-
-                            lessonShelf(section)
-                        }
-                        .id(section.id)
+                        Text(shortLabel(section)).tag(section.id)
                     }
                 }
-                .padding(.horizontal, 70)
-                .padding(.vertical, 50)
-            }
-            .onChange(of: scrollTarget) { _, newValue in
-                guard let newValue else { return }
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    proxy.scrollTo(newValue, anchor: .center)
+                .pickerStyle(.segmented)
+                .labelsHidden()
+
+                if let section = selectedSection {
+                    Text(section.title)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+
+                    lessonCarousel(section)
+                        .task(id: selectedSectionID) {
+                            await session.prefetchPosters(for: section.lessons)
+                        }
                 }
             }
+            .padding(.horizontal, 70)
+            .padding(.vertical, 50)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private func progressLine(_ outline: CourseOutline) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 20) {
             ProgressView(value: Double(outline.percentComplete), total: 100)
                 .progressViewStyle(.linear)
                 .frame(maxWidth: 360)
@@ -83,7 +85,7 @@ struct CourseBrowserView: View {
         }
     }
 
-    private func lessonShelf(_ section: CourseSection) -> some View {
+    private func lessonCarousel(_ section: CourseSection) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 24) {
                 ForEach(section.lessons) { lesson in
@@ -106,10 +108,34 @@ struct CourseBrowserView: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 8)
         }
-        .task {
-            await session.prefetchPosters(for: section.lessons)
-        }
     }
+
+    // MARK: - Etiquetas
+
+    /// "Bloque 1 - Dos historias…" → "Bloque 1"; si no, el título corto.
+    private func shortLabel(_ section: CourseSection) -> String {
+        if let range = section.title.range(of: " - ") {
+            let prefix = String(section.title[..<range.lowerBound])
+            if prefix.lowercased().hasPrefix("bloque") {
+                return prefix
+            }
+        }
+
+        if section.title.count > 26 {
+            return String(section.title.prefix(24)) + "…"
+        }
+        return section.title
+    }
+
+    private var selectedSection: CourseSection? {
+        guard let outline else { return nil }
+        if let section = outline.sections.first(where: { $0.id == selectedSectionID }) {
+            return section
+        }
+        return outline.sections.first
+    }
+
+    // MARK: - Navegación
 
     private func open(_ lesson: LessonSummary, section: CourseSection, autoPlay: Bool) {
         route = LessonRoute(
@@ -173,11 +199,11 @@ struct CourseBrowserView: View {
         if let section = outline.sections.first(where: { section in
             section.lessons.contains { $0.id == target.id }
         }) {
-            scrollTarget = section.id
+            selectedSectionID = section.id
         }
 
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 300_000_000)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             focusedLesson = target.id
         }
     }

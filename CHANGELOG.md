@@ -42,8 +42,9 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 ### Changed
 - Navegación principal: **una pestaña por curso** + Configuración (TabView
   nativo), sin sub-pestañas ni botones custom.
-- Dentro de cada curso, una **shelf por bloque** con encabezado y carrusel de
-  lecciones; progreso con `ProgressView` nativo.
+- Dentro de cada curso, un **Picker segmentado de bloques** (etiquetas
+  "Bloque N") con el nombre completo debajo y **un solo carrusel** para el
+  bloque elegido; progreso con `ProgressView` nativo.
 - Sin título duplicado ni email en el listado; el correo vive solo en
   Configuración.
 - Up Next: la cuenta regresiva arranca a los 5 s del final.
