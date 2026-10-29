@@ -5,6 +5,8 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
+    @State private var emailFocused = false
+    @State private var passwordFocused = false
 
     var body: some View {
         HStack(spacing: 90) {
@@ -24,13 +26,30 @@ struct LoginView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 30) {
-                TextField("Email", text: $email)
-                    .textContentType(.username)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
+                LoginField(
+                    placeholder: "Email",
+                    text: $email,
+                    contentType: .username,
+                    keyboardType: .emailAddress,
+                    returnKeyType: .next,
+                    onFocusChange: { emailFocused = $0 }
+                )
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(fieldBackground(emailFocused))
 
-                SecureField("Contraseña", text: $password)
-                    .textContentType(.password)
+                LoginField(
+                    placeholder: "Contraseña",
+                    text: $password,
+                    isSecure: true,
+                    contentType: .password,
+                    returnKeyType: .go,
+                    onSubmit: submit,
+                    onFocusChange: { passwordFocused = $0 }
+                )
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(fieldBackground(passwordFocused))
 
                 if let error = session.errorMessage {
                     Text(error)
@@ -40,7 +59,7 @@ struct LoginView: View {
 
                 HStack(spacing: 24) {
                     Button("Entrar") {
-                        Task { await session.signIn(email: email, password: password) }
+                        submit()
                     }
                     .disabled(session.isLoading)
 
@@ -58,6 +77,15 @@ struct LoginView: View {
         }
         .padding(90)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func fieldBackground(_ focused: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color.white.opacity(focused ? 0.16 : 0.06))
+    }
+
+    private func submit() {
+        Task { await session.signIn(email: email, password: password) }
     }
 
     private static var versionLabel: String {

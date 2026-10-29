@@ -22,6 +22,8 @@ final class SessionStore: ObservableObject {
     private var outlineCache: [String: CourseOutline] = [:]
     private var posterCache: [String: URL] = [:]
     private var posterTasks: Set<String> = []
+    /// Invalida escrituras de cookies que quedaron en vuelo tras cerrar sesión.
+    private var sessionGeneration = 0
     private static let emailAccount = "focusarte.email"
     private static let posterCacheKey = "lesson_poster_urls"
     private static let passwordAccount = "focusarte.password"
@@ -69,10 +71,13 @@ final class SessionStore: ObservableObject {
     }
 
     func signOut() async {
+        sessionGeneration += 1
         PlaybackManager.shared.stop()
         await client.clearSession()
         keychain.delete(Self.cookiesAccount)
         keychain.delete(Self.passwordAccount)
+        keychain.delete(Self.emailAccount)
+        PlaybackPreferences.shared.reset()
         courses = []
         signedInEmail = ""
         clearCaches()
@@ -220,9 +225,11 @@ final class SessionStore: ObservableObject {
     }
 
     private func persistCookies() {
+        let generation = sessionGeneration
         Task { [weak self] in
             guard let self else { return }
             let snapshot = await self.client.cookieSnapshot
+            guard generation == self.sessionGeneration else { return }
             guard let data = try? JSONEncoder().encode(snapshot) else { return }
             self.keychain.save(data, Self.cookiesAccount)
         }

@@ -37,4 +37,14 @@ final class PlaybackPreferences: ObservableObject {
         UserDefaults.standard.set(courseSlug, forKey: Self.lastCourseKey)
         UserDefaults.standard.set(lessonID, forKey: Self.lastLessonKey)
     }
+
+    /// Vuelve a los valores por defecto, como si la app se abriera por primera vez.
+    func reset() {
+        UserDefaults.standard.removeObject(forKey: Self.autoplayKey)
+        UserDefaults.standard.removeObject(forKey: Self.lastCourseKey)
+        UserDefaults.standard.removeObject(forKey: Self.lastLessonKey)
+        autoplayNextLesson = true
+        lastCourseSlug = nil
+        lastLessonID = nil
+    }
 }

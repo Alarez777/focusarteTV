@@ -2,21 +2,42 @@ import Foundation
 import Security
 
 /// Almacenamiento mínimo en Keychain para credenciales y cookies de sesión.
+///
+/// Los ítems quedan ligados a este dispositivo (`ThisDeviceOnly`) y nunca se
+/// sincronizan por iCloud Keychain. Es un llavero privado de la app, distinto
+/// del Llavero de iCloud que ve el usuario.
 struct KeychainStore {
-    private let service = "com.focusartetv.FocusarteTV"
+    private var service: String {
+        Bundle.main.bundleIdentifier ?? "com.focusartetv.FocusarteTV"
+    }
 
-    func save(_ data: Data, _ account: String) {
+    /// Crea el ítem o actualiza el existente. Devuelve el `OSStatus` de Security.
+    @discardableResult
+    func save(_ data: Data, _ account: String) -> OSStatus {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
-        SecItemDelete(query as CFDictionary)
+
+        let update: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let updated = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        if updated == errSecSuccess {
+            return updated
+        }
+        guard updated == errSecItemNotFound else {
+            return updated
+        }
 
         var attributes = query
         attributes[kSecValueData as String] = data
-        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-        SecItemAdd(attributes as CFDictionary, nil)
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        attributes[kSecAttrSynchronizable as String] = kCFBooleanFalse
+        return SecItemAdd(attributes as CFDictionary, nil)
     }
 
     func read(_ account: String) -> Data? {
@@ -34,16 +55,18 @@ struct KeychainStore {
         return result as? Data
     }
 
-    func delete(_ account: String) {
+    @discardableResult
+    func delete(_ account: String) -> OSStatus {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
-        SecItemDelete(query as CFDictionary)
+        return SecItemDelete(query as CFDictionary)
     }
 
-    func saveString(_ value: String, _ account: String) {
+    @discardableResult
+    func saveString(_ value: String, _ account: String) -> OSStatus {
         save(Data(value.utf8), account)
     }
 

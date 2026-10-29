@@ -57,6 +57,8 @@ va en `FocusarteCore`.
    tests sobre fixtures. Si Kajabi cambia el markup, se arregla ahí y nada más.
 7. **Sin Ruby** en el proyecto (nada de `xcodeproj` gem). XcodeGen o Swift.
 8. **Commits en español o inglés, pero consistentes.** Mensajes en imperativo.
+9. **CHANGELOG sin wraps.** Una entrada por línea; no cortar el texto a mano,
+   el visor hace el wrap.
 
 ## Flujo de ramas
 
