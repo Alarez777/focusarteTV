@@ -98,7 +98,7 @@ struct CourseBrowserView: View {
                     Text(intro)
                         .font(.system(size: 29))
                         .foregroundStyle(.secondary)
-                        .lineLimit(4)
+                        .lineLimit(6)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -106,7 +106,7 @@ struct CourseBrowserView: View {
                     .padding(.top, 6)
 
                 Text("\(outline.completedCount) de \(outline.allLessons.count) lecciones")
-                    .font(.system(size: 20))
+                    .font(.system(size: 29))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

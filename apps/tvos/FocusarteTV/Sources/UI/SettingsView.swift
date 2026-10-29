@@ -37,28 +37,28 @@ struct SettingsView: View {
     // MARK: - Perfil
 
     private var profileColumn: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 24) {
             ZStack {
                 Circle()
                     .fill(Theme.accent)
-                    .frame(width: 140, height: 140)
+                    .frame(width: 180, height: 180)
 
                 Text(initial)
-                    .font(.system(size: 58, weight: .bold))
+                    .font(.system(size: 72, weight: .bold))
                     .foregroundStyle(.white)
             }
 
             Text(session.signedInEmail)
-                .font(.system(size: 20))
-                .foregroundStyle(.secondary)
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 4) {
                 Text("FocusarteTV")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: 20, weight: .medium))
 
                 Text(Self.versionLabel)
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             }
         }
