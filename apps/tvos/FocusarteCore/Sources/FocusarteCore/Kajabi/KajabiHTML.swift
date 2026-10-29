@@ -158,12 +158,7 @@ public enum KajabiHTML {
         }
         flush()
 
-        var intro: String?
-        if let meta = selectFirst(doc, "meta[name='description']") {
-            let content = (try? meta.attr("content")) ?? ""
-            let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty { intro = trimmed }
-        }
+        let intro = courseIntro(from: doc)
 
         return CourseOutline(
             slug: slug,
@@ -268,6 +263,47 @@ public enum KajabiHTML {
         let fragment = String(html[range])
         guard let start = fragment.range(of: "http") else { return nil }
         return URL(string: String(fragment[start.lowerBound...]))
+    }
+
+    /// Descripción real del producto (`#section-product_body`), con fallback al
+    /// meta description quitando el prefijo genérico del sitio.
+    private static func courseIntro(from doc: Document) -> String? {
+        if let body = selectFirst(doc, "#section-product_body .dashboard-text") {
+            var parts: [String] = []
+
+            if let heading = selectFirst(body, "h4") {
+                let title = text(heading)
+                if !title.lowercased().hasPrefix("minicurso") {
+                    parts.append(title)
+                }
+            }
+
+            for paragraph in ((try? body.select("p"))?.array() ?? []) {
+                let value = text(paragraph)
+                if !value.isEmpty { parts.append(value) }
+            }
+
+            var joined = parts.isEmpty ? text(body) : parts.joined(separator: " ")
+            joined = stripSitePrefix(joined)
+            if !joined.isEmpty { return joined }
+        }
+
+        if let meta = selectFirst(doc, "meta[name='description']") {
+            let content = stripSitePrefix(text(meta))
+            if !content.isEmpty { return content }
+        }
+
+        return nil
+    }
+
+    private static func stripSitePrefix(_ value: String) -> String {
+        let prefix = "¡Con este curso de Ter cambiarás tu relación con el arte!"
+        var result = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if result.hasPrefix(prefix) {
+            result = String(result.dropFirst(prefix.count))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return result
     }
 
     private static func progressPercent(in element: Element) -> Int {

@@ -49,8 +49,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Miniaturas con prioridad: actual y siguientes del bloque → bloque siguiente →
   uno atrás → resto; mapa de posters persistido en UserDefaults.
 - Botón "Eliminar caché" en Configuración.
-- Header con imagen 560×315, título 38 pt e intro 25 pt; barra de progreso a
-  todo el ancho con fondo gris oscuro para lo pendiente.
+- Header con imagen 644×362, título 44 pt, intro 29 pt (4 líneas) y contador de
+  lecciones de 20 pt; barra con fondo gris oscuro para lo pendiente.
+- Intro por curso desde `#section-product_body` (Historia y Thyssen tienen la
+  suya) y sin el prefijo genérico del sitio.
 - "Eliminar caché" muestra cuántos MB liberaría.
 - Logo de Focusarte en la esquina superior izquierda, a la altura de las pestañas.
 - Configuración con layout 1/3 + 2/3 estilo tvOS: perfil (inicial, correo,
