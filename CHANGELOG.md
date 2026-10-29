@@ -50,6 +50,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
 - Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, `TextField`/`SecureField` de SwiftUI con su apariencia nativa (sin fondo propio, tvOS ya dibuja el campo) y placeholders que el teclado muestra como subtítulo, versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va a Correo con `@FocusState`, sin abrir el teclado.
+- Login: la bajada ahora aclara que la app es un cliente **no oficial** de focusarte.com.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed

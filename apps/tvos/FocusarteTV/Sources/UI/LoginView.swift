@@ -27,10 +27,11 @@ struct LoginView: View {
                         .font(.system(size: 30))
                         .foregroundStyle(.secondary)
 
-                    Text("Ingresá con tu cuenta para ver los cursos.")
+                    Text("Focusarte para Apple TV es un cliente **no oficial** de focusarte.com.")
                         .font(.system(size: 22))
                         .foregroundStyle(.secondary)
                         .padding(.top, 10)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
