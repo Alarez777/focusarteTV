@@ -40,11 +40,12 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Pantalla Configuración con toggle para desactivar el autoplay.
 
 ### Changed
-- Navegación principal por pestañas (`Mis Cursos` / `Configuración`).
-- `Mis Cursos` con sub-pestañas por curso y por bloque, y carrusel de lecciones
-  con miniatura, título y check de vista.
-- Configuración nativa con `Form`: autoplay, cuenta y versión. `Cerrar sesión`
-  se movió ahí.
+- Navegación principal: **una pestaña por curso** + Configuración (TabView
+  nativo), sin sub-pestañas ni botones custom.
+- Dentro de cada curso, una **shelf por bloque** con encabezado y carrusel de
+  lecciones; progreso con `ProgressView` nativo.
+- Sin título duplicado ni email en el listado; el correo vive solo en
+  Configuración.
 - Up Next: la cuenta regresiva arranca a los 5 s del final.
 - Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
 - La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".

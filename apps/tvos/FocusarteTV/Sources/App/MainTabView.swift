@@ -1,16 +1,20 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject private var session: SessionStore
+
     var body: some View {
         TabView {
-            LibraryView()
-                .tabItem {
-                    Label("Mis Cursos", systemImage: "play.rectangle.on.rectangle")
-                }
+            ForEach(session.courses) { course in
+                CourseBrowserView(course: course)
+                    .tabItem {
+                        Text(course.title)
+                    }
+            }
 
             SettingsView()
                 .tabItem {
-                    Label("Configuración", systemImage: "gearshape")
+                    Text("Configuración")
                 }
         }
     }

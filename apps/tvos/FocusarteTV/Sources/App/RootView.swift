@@ -8,8 +8,13 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            Theme.background
-                .ignoresSafeArea()
+            if session.state == .signedOut {
+                Theme.background
+                    .ignoresSafeArea()
+            } else {
+                Color.black
+                    .ignoresSafeArea()
+            }
 
             switch session.state {
             case .restoring:
