@@ -62,10 +62,14 @@ va en `FocusarteCore`.
 
 ## Flujo de ramas
 
+- `main` — releases. Se actualiza desde `develop` al publicar y se etiqueta con `vX.Y.Z`.
 - `develop` — integración. Cada push compila un IPA.
-- Cambios posteriores a un release: rama propia (`feature/…`), se mergea a `develop`
-  recién cuando el mantenedor confirma que funciona en el Apple TV.
-- Release: tag `vX.Y.Z` → workflow publica el IPA firmable en el release.
+- **Desde v1.0.0, ningún cambio de la app va directo a `develop`.** Cada cambio se hace
+  en su propia rama (`feature/…`, `fix/…`), se compila su IPA y se prueba en el Apple TV.
+  Se mergea a `develop` recién cuando el usuario confirma que funciona.
+- Los cambios de documentación o CI que no tocan la app pueden ir directo a `develop`.
+- Release: tag `vX.Y.Z` sobre `main` → el workflow valida que coincida con
+  `MARKETING_VERSION` y publica el IPA en el release con las notas de `CHANGELOG.md`.
 
 ## Versionado
 
