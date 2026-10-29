@@ -100,12 +100,7 @@ struct LoginView: View {
                 .frame(width: 150, alignment: .leading)
 
             field()
-                .padding(.horizontal, 16)
                 .frame(height: 44)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(white: 0.15))
-                )
         }
     }
 
