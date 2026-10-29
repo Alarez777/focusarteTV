@@ -29,7 +29,7 @@ struct LoginView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
                 Text(Self.versionLabel)
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -41,7 +41,8 @@ struct LoginView: View {
                         text: $email,
                         contentType: .username,
                         keyboardType: .emailAddress,
-                        returnKeyType: .next
+                        returnKeyType: .next,
+                        autoFocus: true
                     )
                 }
 
@@ -74,7 +75,7 @@ struct LoginView: View {
                 }
                 .padding(.top, 4)
 
-                Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · activo=\(diagnostics.activations) · E=\(email.count) P=\(password.count)")
+                Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · should=\(diagnostics.insertions) · last=\(diagnostics.lastInsertionLength) · activo=\(diagnostics.activations) · E=\(email.count) P=\(password.count)")
                     .font(.system(size: 14, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
@@ -96,12 +97,7 @@ struct LoginView: View {
                 .frame(width: 150, alignment: .leading)
 
             field()
-                .padding(.horizontal, 16)
                 .frame(height: 44)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(white: 0.25))
-                )
         }
     }
 

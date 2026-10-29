@@ -7,6 +7,8 @@ final class LoginFieldDiagnostics: ObservableObject {
 
     @Published fileprivate(set) var systemChanges = 0
     @Published fileprivate(set) var editChanges = 0
+    @Published fileprivate(set) var insertions = 0
+    @Published fileprivate(set) var lastInsertionLength = 0
     @Published fileprivate(set) var activations = 0
 
     private init() {
@@ -34,6 +36,7 @@ struct LoginField: UIViewRepresentable {
     var keyboardType: UIKeyboardType = .default
     var returnKeyType: UIReturnKeyType = .default
     var onSubmit: () -> Void = {}
+    var autoFocus: Bool = false
 
     func makeUIView(context: Context) -> UITextField {
         let field = UITextField()
@@ -65,18 +68,22 @@ struct LoginField: UIViewRepresentable {
             object: field
         )
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        if autoFocus {
+            // Enfoca el campo sin entrar en edición (no abre el teclado).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak field] in
+                guard let field, field.window != nil else { return }
+                UIFocusSystem.focusSystem(for: field)?.requestFocusUpdate(to: field)
+            }
+        }
         return field
     }
 
     func updateUIView(_ field: UITextField, context: Context) {
         context.coordinator.parent = self
 
-        // Con el campo enfocado el texto manda el `UITextField`: el usuario y
-        // AutoFill escriben ahí y el binding se sincroniza por notificaciones.
-        // Si acá se asignara el valor viejo del binding, se borraría lo escrito.
-        if !field.isFirstResponder, field.text != text {
-            field.text = text
-        }
+        // El texto va solo del `UITextField` al binding. Si acá se asignara el
+        // valor del binding, un re-render borraría lo que escribe AutoFill.
         // Cambiar `isSecureTextEntry` en cada update borra el texto en curso.
         if field.isSecureTextEntry != isSecure {
             field.isSecureTextEntry = isSecure
@@ -127,6 +134,29 @@ struct LoginField: UIViewRepresentable {
         func textFieldShouldReturn(_ field: UITextField) -> Bool {
             parent.onSubmit()
             return true
+        }
+
+        func textField(
+            _ textField: UITextField,
+            shouldChangeCharactersIn range: NSRange,
+            replacementString string: String
+        ) -> Bool {
+            let diagnostics = LoginFieldDiagnostics.shared
+            diagnostics.insertions += 1
+            diagnostics.lastInsertionLength = string.count
+
+            // AutoFill y el pegado llegan como una inserción en bloque. Se
+            // aplica a mano para que el texto no se pierda si el sistema no
+            // lo confirma.
+            guard string.count > 1,
+                  let current = textField.text,
+                  let swiftRange = Range(range, in: current) else {
+                return true
+            }
+
+            textField.text = current.replacingCharacters(in: swiftRange, with: string)
+            sync(textField)
+            return false
         }
 
         private func sync(_ field: UITextField) {
