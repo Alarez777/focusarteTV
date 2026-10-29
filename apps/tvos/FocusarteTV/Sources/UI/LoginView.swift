@@ -2,10 +2,16 @@ import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject private var session: SessionStore
-    @StateObject private var diagnostics = LoginFieldDiagnostics.shared
 
     @State private var email = ""
     @State private var password = ""
+
+    private enum Field: Hashable {
+        case email
+        case password
+    }
+
+    @FocusState private var focused: Field?
 
     var body: some View {
         HStack(spacing: 90) {
@@ -35,26 +41,23 @@ struct LoginView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 26) {
-                fieldRow(title: "Correo") {
-                    LoginField(
-                        placeholder: "",
-                        text: $email,
-                        contentType: .username,
-                        keyboardType: .emailAddress,
-                        returnKeyType: .next,
-                        autoFocus: true
-                    )
+                fieldRow(title: "Correo", isFocused: focused == .email) {
+                    TextField("", text: $email)
+                        .textContentType(.username)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .submitLabel(.next)
+                        .focused($focused, equals: .email)
+                        .onSubmit { focused = .password }
                 }
 
-                fieldRow(title: "Contraseña") {
-                    LoginField(
-                        placeholder: "",
-                        text: $password,
-                        isSecure: true,
-                        contentType: .password,
-                        returnKeyType: .continue,
-                        onSubmit: submit
-                    )
+                fieldRow(title: "Contraseña", isFocused: focused == .password) {
+                    SecureField("", text: $password)
+                        .textContentType(.password)
+                        .submitLabel(.continue)
+                        .focused($focused, equals: .password)
+                        .onSubmit { submit() }
                 }
 
                 if let error = session.errorMessage {
@@ -75,22 +78,21 @@ struct LoginView: View {
                 }
                 .padding(.top, 4)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · should=\(diagnostics.insertions) · last=\(diagnostics.lastInsertionLength)")
-                    Text("lenS=\(diagnostics.lastSystemLength) · lenE=\(diagnostics.lastEditLength) · activo=\(diagnostics.activations) · E=\"\(emailPreview)\" · P=\(password.count)")
-                }
-                .font(.system(size: 14, design: .monospaced))
-                .foregroundStyle(.secondary)
+                Text("E=\"\(emailPreview)\" · P=\(password.count)")
+                    .font(.system(size: 14, design: .monospaced))
+                    .foregroundStyle(.secondary)
             }
             .frame(width: 720)
         }
         .padding(90)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { focused = .email }
     }
 
     @ViewBuilder
     private func fieldRow<Field: View>(
         title: String,
+        isFocused: Bool,
         @ViewBuilder field: () -> Field
     ) -> some View {
         HStack(spacing: 28) {
@@ -100,7 +102,14 @@ struct LoginView: View {
                 .frame(width: 150, alignment: .leading)
 
             field()
+                .font(.system(size: 26))
+                .padding(.horizontal, 16)
                 .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(white: isFocused ? 0.30 : 0.15))
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
     }
 
