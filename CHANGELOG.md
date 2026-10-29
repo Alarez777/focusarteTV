@@ -53,6 +53,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   lecciones de 26 pt; barra con fondo gris oscuro para lo pendiente, 20 pt más
   arriba que antes.
 - Logo Focusarte a 65 pt de alto, alineado arriba a la izquierda (offset -16).
+- Progreso por capítulo: barra de 6 pt superpuesta al ras de la parte inferior
+  del poster, en vez de debajo del título.
 - Perfil de Configuración estilo PatreonTV: círculo de 180 con inicial 72, email
   29 pt y "FocusarteTV versión (build)" en una sola línea de 21 pt.
 - Intro por curso desde `#section-product_body` (Historia y Thyssen tienen la

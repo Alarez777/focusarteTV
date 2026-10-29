@@ -40,6 +40,22 @@ struct LessonCard: View {
                         .fill(Color.white.opacity(0.08))
                 }
                 .frame(width: 360, height: 202)
+                .overlay(alignment: .bottom) {
+                    if !lesson.isCompleted, lesson.percentComplete > 0 {
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                Rectangle().fill(Color.black.opacity(0.45))
+                                Rectangle()
+                                    .fill(Theme.accent)
+                                    .frame(
+                                        width: geometry.size.width
+                                            * CGFloat(min(max(lesson.percentComplete, 0), 100)) / 100
+                                    )
+                            }
+                        }
+                        .frame(height: 6)
+                    }
+                }
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
@@ -61,21 +77,6 @@ struct LessonCard: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
                 .frame(width: 360, alignment: .leading)
-
-            if !lesson.isCompleted, lesson.percentComplete > 0 {
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.15))
-                        Capsule()
-                            .fill(Theme.accent)
-                            .frame(
-                                width: geometry.size.width
-                                    * CGFloat(min(max(lesson.percentComplete, 0), 100)) / 100
-                            )
-                    }
-                }
-                .frame(width: 360, height: 4)
-            }
         }
         .frame(width: 360, alignment: .leading)
     }
