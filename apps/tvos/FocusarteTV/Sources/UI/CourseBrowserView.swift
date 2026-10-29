@@ -86,25 +86,23 @@ struct CourseBrowserView: View {
                 Rectangle()
                     .fill(Color.white.opacity(0.08))
             }
-            .frame(width: 460, height: 259)
+            .frame(width: 560, height: 315)
             .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 12) {
                 Text(course.title)
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.system(size: 38, weight: .bold))
 
                 if let intro = outline.intro, !intro.isEmpty {
                     Text(intro)
-                        .font(.system(size: 22))
+                        .font(.system(size: 25))
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                ProgressView(value: Double(outline.percentComplete), total: 100)
-                    .progressViewStyle(.linear)
-                    .frame(maxWidth: .infinity)
+                courseProgressBar(outline)
                     .padding(.top, 6)
 
                 Text("\(outline.completedCount) de \(outline.allLessons.count) lecciones")
@@ -113,6 +111,23 @@ struct CourseBrowserView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func courseProgressBar(_ outline: CourseOutline) -> some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color(white: 0.22))
+
+                Capsule()
+                    .fill(Theme.accent)
+                    .frame(
+                        width: geometry.size.width
+                            * CGFloat(min(max(outline.percentComplete, 0), 100)) / 100
+                    )
+            }
+        }
+        .frame(height: 8)
     }
 
     // MARK: - Carrusel

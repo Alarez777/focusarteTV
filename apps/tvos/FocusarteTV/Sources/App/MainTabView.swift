@@ -7,24 +7,34 @@ struct MainTabView: View {
     @State private var selection: String = ""
 
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(session.courses) { course in
-                CourseBrowserView(course: course)
+        ZStack(alignment: .topLeading) {
+            TabView(selection: $selection) {
+                ForEach(session.courses) { course in
+                    CourseBrowserView(course: course)
+                        .tabItem {
+                            Text(course.title)
+                        }
+                        .tag(course.slug)
+                }
+
+                SettingsView()
                     .tabItem {
-                        Text(course.title)
+                        Text("Configuración")
                     }
-                    .tag(course.slug)
+                    .tag("settings")
+            }
+            .onAppear { selectInitialTab() }
+            .onChange(of: session.courses.count) { _, _ in
+                selectInitialTab()
             }
 
-            SettingsView()
-                .tabItem {
-                    Text("Configuración")
-                }
-                .tag("settings")
-        }
-        .onAppear { selectInitialTab() }
-        .onChange(of: session.courses.count) { _, _ in
-            selectInitialTab()
+            Image("FocusarteWordmark")
+                .resizable()
+                .scaledToFit()
+                .frame(height: 26)
+                .padding(.leading, 60)
+                .padding(.top, 30)
+                .allowsHitTesting(false)
         }
     }
 
