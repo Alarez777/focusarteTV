@@ -30,6 +30,11 @@ final class PlaybackManager: ObservableObject {
     @Published private(set) var isPictureInPictureActive = false
     @Published private(set) var upNext: UpNextLesson?
     @Published private(set) var upNextCountdown: Int?
+    /// Lección que está sonando (sigue al auto-avance).
+    @Published private(set) var currentLessonKey: String?
+    /// Se incrementa después de reportar progreso, para que la UI refresque
+    /// recién cuando el servidor ya tiene el dato.
+    @Published private(set) var progressRevision = 0
 
     private(set) var active: Session?
     private var upNextCancelled = false
@@ -79,6 +84,7 @@ final class PlaybackManager: ObservableObject {
         resolvingNext = false
         ended = false
         isPictureInPictureActive = false
+        currentLessonKey = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
@@ -147,6 +153,7 @@ final class PlaybackManager: ObservableObject {
 
         active = session
         presented = session
+        currentLessonKey = key
         upNext = nil
         upNextCountdown = nil
         upNextCancelled = false
@@ -172,7 +179,7 @@ final class PlaybackManager: ObservableObject {
         }
 
         guard !upNextCancelled else { return }
-        guard remaining > 0, remaining <= 15 else { return }
+        guard remaining > 0, remaining <= 5 else { return }
 
         upNextCountdown = max(0, Int(remaining.rounded()))
 
@@ -289,6 +296,7 @@ final class PlaybackManager: ObservableObject {
             if shouldComplete {
                 try? await client.setCompleted(true, token: token)
             }
+            progressRevision += 1
         }
     }
 

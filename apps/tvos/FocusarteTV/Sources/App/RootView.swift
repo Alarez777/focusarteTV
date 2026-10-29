@@ -17,7 +17,7 @@ struct RootView: View {
             case .signedOut:
                 LoginView()
             case .signedIn:
-                LibraryView()
+                MainTabView()
             }
         }
         .environmentObject(session)

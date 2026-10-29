@@ -40,6 +40,12 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Pantalla Configuración con toggle para desactivar el autoplay.
 
 ### Changed
+- Navegación principal por pestañas (`Mis Cursos` / `Configuración`).
+- `Mis Cursos` con sub-pestañas por curso y por bloque, y carrusel de lecciones
+  con miniatura, título y check de vista.
+- Configuración nativa con `Form`: autoplay, cuenta y versión. `Cerrar sesión`
+  se movió ahí.
+- Up Next: la cuenta regresiva arranca a los 5 s del final.
 - Al abrir un curso, el foco va a la primera lección sin completar (con scroll).
 - La lección ya no reproduce sola: muestra el poster y un botón "Reproducir".
 - La reproducción es a pantalla completa con `AVPlayerViewController` y vuelve
@@ -49,6 +55,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
   arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 
 ### Fixed
+- El refresco del curso podía leer progreso viejo antes de que terminara el
+  reporte: ahora espera `progressRevision`.
+- Después del auto-avance, el post y el foco siguen a la lección que realmente
+  está sonando (`currentLessonKey`).
 - El primer "Reproducir" abría un player vacío y perdía el foco: ahora el cover
   usa `fullScreenCover(item:)` con el player dentro del item.
 - Play del control remoto sobre el botón "Reproducir" también inicia el video.

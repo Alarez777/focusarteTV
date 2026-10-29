@@ -27,52 +27,57 @@ struct ProgressBar: View {
     }
 }
 
-struct CourseCard: View {
-    let course: Course
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            CachedImage(url: course.imageURL) {
-                Rectangle()
-                    .fill(Color.white.opacity(0.08))
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 300)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-            Text(course.title)
-                .font(.system(size: 30, weight: .semibold))
-                .lineLimit(2)
-
-            ProgressBar(percent: course.percentComplete)
-        }
-    }
-}
-
-struct LessonRow: View {
+/// Tarjeta del carrusel de lecciones.
+struct LessonCard: View {
     let lesson: LessonSummary
+    let posterURL: URL?
 
     var body: some View {
-        HStack(spacing: 18) {
-            Image(systemName: lesson.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 22))
-                .foregroundStyle(lesson.isCompleted ? Theme.accent : Color.white.opacity(0.35))
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack(alignment: .topTrailing) {
+                CachedImage(url: posterURL) {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.08))
+                }
+                .frame(width: 360, height: 202)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                if lesson.isCompleted {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.accent)
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(10)
+                }
+            }
 
             Text(lesson.title)
-                .font(.system(size: 24))
+                .font(.system(size: 20, weight: .medium))
                 .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(width: 360, alignment: .leading)
 
-            Spacer(minLength: 0)
-
-            if lesson.percentComplete > 0 && !lesson.isCompleted {
-                Text("\(lesson.percentComplete)%")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.secondary)
+            if !lesson.isCompleted, lesson.percentComplete > 0 {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.white.opacity(0.15))
+                        Capsule()
+                            .fill(Theme.accent)
+                            .frame(
+                                width: geometry.size.width
+                                    * CGFloat(min(max(lesson.percentComplete, 0), 100)) / 100
+                            )
+                    }
+                }
+                .frame(width: 360, height: 4)
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 16)
+        .frame(width: 360, alignment: .leading)
     }
 }
 

@@ -20,6 +20,8 @@ final class SessionStore: ObservableObject {
 
     private let keychain: KeychainStore
     private var outlineCache: [String: CourseOutline] = [:]
+    private var posterCache: [String: URL] = [:]
+    private var posterTasks: Set<String> = []
     private static let emailAccount = "focusarte.email"
     private static let passwordAccount = "focusarte.password"
     private static let cookiesAccount = "focusarte.cookies"
@@ -69,6 +71,8 @@ final class SessionStore: ObservableObject {
         courses = []
         signedInEmail = ""
         outlineCache.removeAll()
+        posterCache.removeAll()
+        posterTasks.removeAll()
         state = .signedOut
     }
 
@@ -85,6 +89,58 @@ final class SessionStore: ObservableObject {
         let outline = try await client.loadCourse(slug: slug)
         outlineCache[slug] = outline
         return outline
+    }
+
+    // MARK: - Miniaturas de lecciones
+
+    func lessonPosterURL(for lessonID: String) -> URL? {
+        posterCache[lessonID]
+    }
+
+    /// Trae los posters de las lecciones indicadas (máximo 3 requests en vuelo).
+    /// El outline de Kajabi no incluye imágenes por lección: hay que leer cada
+    /// página para obtener el `stillUrl`.
+    func prefetchPosters(for lessons: [LessonSummary]) async {
+        let missing = lessons.filter {
+            posterCache[$0.id] == nil && !posterTasks.contains($0.id)
+        }
+        guard !missing.isEmpty else { return }
+
+        for lesson in missing {
+            posterTasks.insert(lesson.id)
+        }
+
+        let client = self.client
+
+        await withTaskGroup(of: (String, URL?).self) { group in
+            var index = 0
+            let window = 3
+
+            while index < min(window, missing.count) {
+                let lesson = missing[index]
+                index += 1
+                group.addTask {
+                    let parsed = try? await client.loadLesson(path: lesson.path)
+                    return (lesson.id, parsed?.posterURL)
+                }
+            }
+
+            while let (id, url) = await group.next() {
+                if let url {
+                    posterCache[id] = url
+                }
+                posterTasks.remove(id)
+
+                if index < missing.count {
+                    let lesson = missing[index]
+                    index += 1
+                    group.addTask {
+                        let parsed = try? await client.loadLesson(path: lesson.path)
+                        return (lesson.id, parsed?.posterURL)
+                    }
+                }
+            }
+        }
     }
 
     func reloadLibrary() async {

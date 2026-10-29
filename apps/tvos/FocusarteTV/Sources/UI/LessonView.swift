@@ -8,6 +8,7 @@ struct LessonView: View {
     @EnvironmentObject private var session: SessionStore
     @ObservedObject private var playback = PlaybackManager.shared
 
+    @State private var displayedSummary: LessonSummary
     @State private var lesson: Lesson?
     @State private var blocks: [LessonBlock] = []
     @State private var videoAsset: VideoAsset?
@@ -18,7 +19,11 @@ struct LessonView: View {
     @FocusState private var playButtonFocused: Bool
 
     private let baseURL = URL(string: "https://www.focusarte.com")!
-    private var summary: LessonSummary { route.summary }
+
+    init(route: LessonRoute) {
+        self.route = route
+        _displayedSummary = State(initialValue: route.summary)
+    }
 
     var body: some View {
         ScrollView {
@@ -40,7 +45,10 @@ struct LessonView: View {
             }
             .padding(80)
         }
-        .task { await load() }
+        .task { await loadLesson(displayedSummary) }
+        .onChange(of: playback.currentLessonKey) { _, newValue in
+            followPlayback(newValue)
+        }
         .onChange(of: playback.presented?.id) { _, newValue in
             guard newValue == nil else { return }
             Task { @MainActor in
@@ -69,7 +77,7 @@ struct LessonView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 24) {
-            Text(lesson?.title ?? summary.title)
+            Text(lesson?.title ?? displayedSummary.title)
                 .font(.system(size: 40, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -123,9 +131,27 @@ struct LessonView: View {
 
     // MARK: - Datos
 
-    private func load() async {
+    /// Cuando el player auto-avanza, esta pantalla sigue a la lección que suena.
+    private func followPlayback(_ key: String?) {
+        guard let key,
+              key != displayedSummary.id,
+              let outline = session.cachedOutline(for: route.courseSlug),
+              let next = outline.allLessons.first(where: { $0.id == key }) else {
+            return
+        }
+
+        displayedSummary = next
+        Task { await loadLesson(next) }
+    }
+
+    private func loadLesson(_ target: LessonSummary) async {
+        lesson = nil
+        blocks = []
+        videoAsset = nil
+        errorMessage = nil
+
         do {
-            let loaded = try await session.client.loadLesson(path: summary.path)
+            let loaded = try await session.client.loadLesson(path: target.path)
             lesson = loaded
             isCompleted = loaded.isCompleted
             blocks = LessonHTMLParser.blocks(from: loaded.bodyHTML, baseURL: baseURL)
@@ -134,7 +160,7 @@ struct LessonView: View {
                 videoAsset = try await session.client.resolveVideo(mediaID: video.mediaID)
             }
 
-            if route.autoPlay, !autoPlayHandled {
+            if route.autoPlay, !autoPlayHandled, target.id == route.summary.id {
                 autoPlayHandled = true
                 if videoAsset?.playbackURL != nil {
                     startPlayback()
@@ -143,7 +169,6 @@ struct LessonView: View {
             }
 
             if videoAsset != nil {
-                // El foco arranca en "Reproducir", que es la acción principal.
                 try? await Task.sleep(nanoseconds: 150_000_000)
                 playButtonFocused = true
             }
