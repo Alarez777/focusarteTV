@@ -5,6 +5,8 @@ struct LoginView: View {
 
     @State private var email = ""
     @State private var password = ""
+    @State private var emailChanges = 0
+    @State private var passwordChanges = 0
 
     private enum Field: Hashable {
         case email
@@ -41,7 +43,7 @@ struct LoginView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 26) {
-                fieldRow(title: "Correo", isFocused: focused == .email) {
+                fieldRow(title: "Correo") {
                     TextField("", text: $email)
                         .textContentType(.username)
                         .keyboardType(.emailAddress)
@@ -50,14 +52,16 @@ struct LoginView: View {
                         .submitLabel(.next)
                         .focused($focused, equals: .email)
                         .onSubmit { focused = .password }
+                        .onChange(of: email) { _, _ in emailChanges += 1 }
                 }
 
-                fieldRow(title: "Contraseña", isFocused: focused == .password) {
+                fieldRow(title: "Contraseña") {
                     SecureField("", text: $password)
                         .textContentType(.password)
                         .submitLabel(.continue)
                         .focused($focused, equals: .password)
                         .onSubmit { submit() }
+                        .onChange(of: password) { _, _ in passwordChanges += 1 }
                 }
 
                 if let error = session.errorMessage {
@@ -78,7 +82,7 @@ struct LoginView: View {
                 }
                 .padding(.top, 4)
 
-                Text("E=\"\(emailPreview)\" · P=\(password.count)")
+                Text("EV=\(emailChanges) · E=\"\(emailPreview)\" · PV=\(passwordChanges) · P=\(password.count)")
                     .font(.system(size: 14, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
@@ -92,7 +96,6 @@ struct LoginView: View {
     @ViewBuilder
     private func fieldRow<Field: View>(
         title: String,
-        isFocused: Bool,
         @ViewBuilder field: () -> Field
     ) -> some View {
         HStack(spacing: 28) {
@@ -103,13 +106,6 @@ struct LoginView: View {
 
             field()
                 .font(.system(size: 26))
-                .padding(.horizontal, 16)
-                .frame(height: 44)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(white: isFocused ? 0.30 : 0.15))
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
     }
 

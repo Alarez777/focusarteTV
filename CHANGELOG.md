@@ -49,11 +49,11 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Play/Pause del control remoto sobre una fila abre el video directamente.
 - "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
-- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, `TextField`/`SecureField` de SwiftUI con fondo propio (0.15 sin foco, 0.30 con foco), versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va a Correo con `@FocusState`, sin abrir el teclado.
+- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, `TextField`/`SecureField` de SwiftUI con su apariencia nativa (sin fondo propio, tvOS ya dibuja el campo), versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va a Correo con `@FocusState`, sin abrir el teclado.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed
-- Diagnóstico temporal en el login: muestra el correo recibido y la cantidad de caracteres de la contraseña, para saber si AutoFill entrega o no el texto.
+- Diagnóstico temporal en el login: cuenta los cambios del correo y la contraseña (`EV`/`PV`), muestra el correo recibido y la cantidad de caracteres, para saber si AutoFill entrega o no el texto.
 - Keychain: los ítems ahora son `AfterFirstUnlockThisDeviceOnly` (no salen del dispositivo), se guardan sin sincronizar con iCloud Keychain, con update en lugar de delete+add y `OSStatus` verificado.
 - Cerrar sesión podía dejar cookies en Keychain si una escritura estaba en vuelo; ahora se invalida por generación de sesión.
 - Ícono de la app: las capas Back del brand asset no tenían canal alfa y tvOS las descartaba, así que el ícono se veía blanco en el app switcher (solo quedaba el wordmark blanco sobre fondo blanco). Ahora exportan RGBA opaco.
