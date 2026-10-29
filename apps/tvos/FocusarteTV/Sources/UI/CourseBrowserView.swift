@@ -34,6 +34,9 @@ struct CourseBrowserView: View {
             .navigationDestination(item: $route) { route in
                 LessonView(route: route)
             }
+            .navigationDestination(for: LessonDownload.self) { download in
+                DownloadView(download: download)
+            }
             .overlay {
                 if isOpeningLesson {
                     ProgressView()
