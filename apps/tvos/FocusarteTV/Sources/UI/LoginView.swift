@@ -2,35 +2,37 @@ import SwiftUI
 
 struct LoginView: View {
     @EnvironmentObject private var session: SessionStore
+    @StateObject private var diagnostics = LoginFieldDiagnostics.shared
 
     @State private var email = ""
     @State private var password = ""
 
     var body: some View {
         HStack(spacing: 90) {
-            VStack(alignment: .leading, spacing: 24) {
-                Image("FocusarteWordmark")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 150)
-                    .allowsHitTesting(false)
+            ZStack(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 24) {
+                    Image("FocusarteWordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 225)
+                        .allowsHitTesting(false)
 
-                Text("Historia del Arte Clásico")
-                    .font(.system(size: 30))
-                    .foregroundStyle(.secondary)
+                    Text("Historia del Arte Clásico")
+                        .font(.system(size: 30))
+                        .foregroundStyle(.secondary)
 
-                Text("Ingresá con tu cuenta para ver los cursos.")
-                    .font(.system(size: 22))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 10)
-
-                Spacer(minLength: 0)
+                    Text("Ingresá con tu cuenta para ver los cursos.")
+                        .font(.system(size: 22))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 10)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
                 Text(Self.versionLabel)
                     .font(.system(size: 16))
                     .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 26) {
                 fieldRow(title: "Usuario") {
@@ -71,6 +73,10 @@ struct LoginView: View {
                     }
                 }
                 .padding(.top, 4)
+
+                Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · activo=\(diagnostics.activations) · E=\(email.count) P=\(password.count)")
+                    .font(.system(size: 14, design: .monospaced))
+                    .foregroundStyle(.secondary)
             }
             .frame(width: 720)
         }
@@ -90,7 +96,12 @@ struct LoginView: View {
                 .frame(width: 150, alignment: .leading)
 
             field()
+                .padding(.horizontal, 16)
                 .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(white: 0.25))
+                )
         }
     }
 

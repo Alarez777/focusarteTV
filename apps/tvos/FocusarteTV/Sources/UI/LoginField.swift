@@ -1,6 +1,25 @@
 import SwiftUI
 import UIKit
 
+/// Contadores temporales para diagnosticar si tvOS entrega el texto de AutoFill.
+final class LoginFieldDiagnostics: ObservableObject {
+    static let shared = LoginFieldDiagnostics()
+
+    @Published fileprivate(set) var systemChanges = 0
+    @Published fileprivate(set) var editChanges = 0
+    @Published fileprivate(set) var activations = 0
+
+    private init() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.activations += 1 }
+        }
+    }
+}
+
 /// Campo de texto respaldado por `UITextField`.
 ///
 /// Password AutoFill documenta el llenado sobre `UITextField`/`UITextView`; en
@@ -95,10 +114,12 @@ struct LoginField: UIViewRepresentable {
         }
 
         @objc func editingChanged(_ field: UITextField) {
+            LoginFieldDiagnostics.shared.editChanges += 1
             sync(field)
         }
 
         @objc func textDidChange(_ notification: Notification) {
+            LoginFieldDiagnostics.shared.systemChanges += 1
             guard let field = notification.object as? UITextField else { return }
             sync(field)
         }
