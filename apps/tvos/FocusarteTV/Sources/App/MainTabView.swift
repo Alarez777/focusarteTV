@@ -33,6 +33,7 @@ struct MainTabView: View {
                 .scaledToFit()
                 .frame(height: 65)
                 .padding(.leading, 60)
+                .offset(y: -16)
                 .allowsHitTesting(false)
         }
     }

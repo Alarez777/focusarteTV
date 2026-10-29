@@ -73,7 +73,8 @@ struct CourseBrowserView: View {
                 }
             }
             .padding(.horizontal, 70)
-            .padding(.vertical, 50)
+            .padding(.top, 30)
+            .padding(.bottom, 50)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

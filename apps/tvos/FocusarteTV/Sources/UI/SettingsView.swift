@@ -37,7 +37,7 @@ struct SettingsView: View {
     // MARK: - Perfil
 
     private var profileColumn: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 20) {
             ZStack {
                 Circle()
                     .fill(Theme.accent)
@@ -49,21 +49,15 @@ struct SettingsView: View {
             }
 
             Text(session.signedInEmail)
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: 29))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
-            VStack(spacing: 4) {
-                Text("FocusarteTV")
-                    .font(.system(size: 20, weight: .medium))
-
-                Text(Self.versionLabel)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.secondary)
-            }
+            Text(Self.versionLabel)
+                .font(.system(size: 21))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 30)
     }
 
     // MARK: - Opciones
@@ -121,6 +115,6 @@ struct SettingsView: View {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "v\(version) (\(build))"
+        return "FocusarteTV \(version) (\(build))"
     }
 }
