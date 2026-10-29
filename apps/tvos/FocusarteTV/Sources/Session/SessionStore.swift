@@ -22,6 +22,19 @@ final class SessionStore: ObservableObject {
     private var outlineCache: [String: CourseOutline] = [:]
     private var posterCache: [String: URL] = [:]
     private var posterTasks: Set<String> = []
+    /// Lecciones que ya sabemos si tienen video (se llena con el prefetch).
+    private var lessonVideo: [String: Bool] = [:]
+    /// Datos mínimos para lanzar el player desde el carrusel sin abrir el post.
+    private struct PlaybackInfo {
+        let mediaID: String
+        let posterURL: URL?
+        let progressToken: String
+        let title: String
+    }
+    private var playbackInfo: [String: PlaybackInfo] = [:]
+    /// Cola de prefetch de posters. Se reordena sin cancelar el trabajo en curso.
+    private var prefetchQueue: [LessonSummary] = []
+    private var prefetchWorker: Task<Void, Never>?
     /// Invalida escrituras de cookies que quedaron en vuelo tras cerrar sesión.
     private var sessionGeneration = 0
     private static let emailAccount = "focusarte.email"
@@ -105,60 +118,159 @@ final class SessionStore: ObservableObject {
         posterCache[lessonID]
     }
 
-    private var prefetchGeneration = 0
+    /// `nil` si todavía no se cargó la página de esa lección.
+    func lessonHasVideo(_ lessonID: String) -> Bool? {
+        lessonVideo[lessonID]
+    }
 
-    /// Trae posters en el orden de prioridad indicado. Cada llamada invalida
-    /// la anterior: si el usuario cambia de bloque, manda el nuevo orden.
+    /// Reordena la cola de prefetch. El worker sigue trabajando hasta vaciarla;
+    /// si el usuario cambia de bloque solo cambia la prioridad.
     func prefetchPosters(ordered lessons: [LessonSummary]) {
-        prefetchGeneration += 1
-        let generation = prefetchGeneration
-        Task {
-            await runPrefetch(lessons, generation: generation)
+        prefetchQueue = lessons
+        guard prefetchWorker == nil else { return }
+
+        prefetchWorker = Task { [weak self] in
+            await self?.drainPrefetchQueue()
+            self?.prefetchWorker = nil
         }
     }
 
-    private func runPrefetch(_ lessons: [LessonSummary], generation: Int) async {
-        let missing = lessons.filter {
-            posterCache[$0.id] == nil && !posterTasks.contains($0.id)
-        }
-        guard !missing.isEmpty else { return }
+    private func drainPrefetchQueue() async {
+        let client = self.client
+        let window = 3
 
-        for lesson in missing {
-            posterTasks.insert(lesson.id)
+        while !Task.isCancelled, !prefetchQueue.isEmpty {
+            let batch = Array(prefetchQueue.prefix(window))
+            prefetchQueue.removeFirst(min(window, prefetchQueue.count))
+
+            await withTaskGroup(of: (String, Lesson?).self) { group in
+                for lesson in batch {
+                    guard posterCache[lesson.id] == nil,
+                          !posterTasks.contains(lesson.id) else { continue }
+
+                    posterTasks.insert(lesson.id)
+                    group.addTask {
+                        (lesson.id, try? await client.loadLesson(path: lesson.path))
+                    }
+                }
+
+                for await (id, loaded) in group {
+                    if let loaded {
+                        if let url = loaded.posterURL {
+                            posterCache[id] = url
+                            persistPosterCache()
+                        }
+                        lessonVideo[id] = loaded.video != nil
+                        if let video = loaded.video {
+                            playbackInfo[id] = PlaybackInfo(
+                                mediaID: video.mediaID,
+                                posterURL: loaded.posterURL,
+                                progressToken: loaded.progressToken,
+                                title: loaded.title
+                            )
+                        }
+                    }
+                    posterTasks.remove(id)
+                }
+            }
+        }
+    }
+
+    // MARK: - Reproducción
+
+    /// Lanza el player desde el carrusel. Devuelve `false` si la lección no
+    /// tiene video (entonces corresponde abrir el post).
+    @discardableResult
+    func startPlayback(
+        summary: LessonSummary,
+        sectionTitle: String,
+        courseTitle: String,
+        courseSlug: String
+    ) async -> Bool {
+        guard let info = await playbackInfo(for: summary),
+              let asset = try? await client.resolveVideo(mediaID: info.mediaID),
+              let url = asset.playbackURL else {
+            return false
         }
 
+        PlaybackManager.shared.play(
+            key: summary.id,
+            url: url,
+            duration: asset.duration,
+            progressToken: info.progressToken,
+            client: client,
+            metadata: PlaybackMetadata(
+                title: info.title,
+                courseTitle: courseTitle,
+                sectionTitle: sectionTitle,
+                artworkURL: info.posterURL ?? asset.posterURL
+            ),
+            courseSlug: courseSlug,
+            nextProvider: makeNextProvider(courseSlug: courseSlug, courseTitle: courseTitle)
+        )
+        return true
+    }
+
+    private func playbackInfo(for summary: LessonSummary) async -> PlaybackInfo? {
+        if let cached = playbackInfo[summary.id] {
+            return cached
+        }
+
+        guard let lesson = try? await client.loadLesson(path: summary.path) else {
+            return nil
+        }
+
+        lessonVideo[summary.id] = lesson.video != nil
+        guard let video = lesson.video else { return nil }
+
+        let info = PlaybackInfo(
+            mediaID: video.mediaID,
+            posterURL: lesson.posterURL,
+            progressToken: lesson.progressToken,
+            title: lesson.title
+        )
+        playbackInfo[summary.id] = info
+        return info
+    }
+
+    /// Resuelve la próxima lección reproducible a partir del outline cacheado.
+    func makeNextProvider(courseSlug: String, courseTitle: String) -> PlaybackManager.NextProvider? {
+        guard let outline = outlineCache[courseSlug] else { return nil }
+
+        let flat: [(section: String, lesson: LessonSummary)] = outline.sections.flatMap { section in
+            section.lessons.map { (section.title, $0) }
+        }
         let client = self.client
 
-        await withTaskGroup(of: (String, URL?).self) { group in
-            var index = 0
-            let window = 3
-
-            while index < min(window, missing.count) {
-                let lesson = missing[index]
-                index += 1
-                group.addTask {
-                    let parsed = try? await client.loadLesson(path: lesson.path)
-                    return (lesson.id, parsed?.posterURL)
-                }
+        return { currentKey in
+            guard let index = flat.firstIndex(where: { $0.lesson.id == currentKey }) else {
+                return nil
             }
 
-            while let (id, url) = await group.next() {
-                if let url {
-                    posterCache[id] = url
-                    persistPosterCache()
+            let candidates = flat[(index + 1)...].prefix(4)
+            for candidate in candidates {
+                guard let lesson = try? await client.loadLesson(path: candidate.lesson.path),
+                      let video = lesson.video,
+                      let asset = try? await client.resolveVideo(mediaID: video.mediaID),
+                      let url = asset.playbackURL else {
+                    continue
                 }
-                posterTasks.remove(id)
 
-                guard generation == prefetchGeneration else { continue }
-                guard index < missing.count else { continue }
-
-                let lesson = missing[index]
-                index += 1
-                group.addTask {
-                    let parsed = try? await client.loadLesson(path: lesson.path)
-                    return (lesson.id, parsed?.posterURL)
-                }
+                return UpNextLesson(
+                    key: lesson.id,
+                    url: url,
+                    duration: asset.duration,
+                    progressToken: lesson.progressToken,
+                    client: client,
+                    metadata: PlaybackMetadata(
+                        title: lesson.title,
+                        courseTitle: courseTitle,
+                        sectionTitle: candidate.section,
+                        artworkURL: lesson.posterURL ?? asset.posterURL
+                    )
+                )
             }
+            return nil
         }
     }
 
@@ -186,7 +298,11 @@ final class SessionStore: ObservableObject {
         outlineCache.removeAll()
         posterCache.removeAll()
         posterTasks.removeAll()
-        prefetchGeneration += 1
+        lessonVideo.removeAll()
+        playbackInfo.removeAll()
+        prefetchWorker?.cancel()
+        prefetchWorker = nil
+        prefetchQueue.removeAll()
         UserDefaults.standard.removeObject(forKey: Self.posterCacheKey)
         ImageStore.shared.clear()
     }

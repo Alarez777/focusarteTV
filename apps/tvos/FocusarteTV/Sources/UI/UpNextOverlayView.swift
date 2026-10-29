@@ -36,8 +36,8 @@ struct UpNextOverlayView: View {
         }
         .padding(28)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .padding(.trailing, 80)
-        .padding(.bottom, 200)
+        .padding(.trailing, 40)
+        .padding(.bottom, 110)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         .allowsHitTesting(false)
     }

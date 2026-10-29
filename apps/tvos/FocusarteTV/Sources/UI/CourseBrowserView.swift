@@ -13,6 +13,8 @@ struct CourseBrowserView: View {
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
     @State private var autoFocusTarget: String?
+    @State private var sectionPositions: [String: String] = [:]
+    @State private var isOpeningLesson = false
     @FocusState private var focusedLesson: String?
 
     var body: some View {
@@ -32,6 +34,14 @@ struct CourseBrowserView: View {
             .navigationDestination(item: $route) { route in
                 LessonView(route: route)
             }
+            .overlay {
+                if isOpeningLesson {
+                    ProgressView()
+                        .scaleEffect(1.6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black.opacity(0.25))
+                }
+            }
         }
         .task { await loadWithCache() }
         .onChange(of: playback.progressRevision) { _, _ in
@@ -43,6 +53,7 @@ struct CourseBrowserView: View {
         }
         .onChange(of: focusedLesson) { _, newValue in
             guard let newValue, let outline else { return }
+            sectionPositions[selectedSectionID] = newValue
             Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 guard focusedLesson == newValue else { return }
@@ -203,13 +214,34 @@ struct CourseBrowserView: View {
                 focusedLesson = nil
                 autoFocusTarget = nil
 
-                if let section = outline.sections.first(where: { $0.id == newValue }) {
-                    let first = section.lessons.first?.id ?? ""
-                    carouselTarget = first
-                    applyPrefetchPlan(outline: outline, currentLessonID: first)
-                }
+                let target = preferredLessonID(in: newValue, outline: outline)
+                carouselTarget = target
+                autoFocusTarget = target
+                applyPrefetchPlan(outline: outline, currentLessonID: target)
             }
         )
+    }
+
+    /// Última lección vista en el bloque; si nunca se visitó, la que está
+    /// sonando o la primera sin completar.
+    private func preferredLessonID(in sectionID: String, outline: CourseOutline) -> String {
+        let lessons = outline.sections.first(where: { $0.id == sectionID })?.lessons ?? []
+
+        if let remembered = sectionPositions[sectionID],
+           lessons.contains(where: { $0.id == remembered }) {
+            return remembered
+        }
+
+        if let current = playback.currentLessonKey,
+           lessons.contains(where: { $0.id == current }) {
+            return current
+        }
+
+        if let pending = lessons.first(where: { !$0.isCompleted }) {
+            return pending.id
+        }
+
+        return lessons.first?.id ?? ""
     }
 
     private func shortLabel(_ section: CourseSection) -> String {
@@ -275,9 +307,35 @@ struct CourseBrowserView: View {
     // MARK: - Navegación
 
     private func open(_ lesson: LessonSummary, section: CourseSection, autoPlay: Bool) {
+        // Video ya identificado: reproducir sin pasar por el post.
+        if session.lessonHasVideo(lesson.id) == true {
+            isOpeningLesson = true
+            Task { @MainActor in
+                let started = await session.startPlayback(
+                    summary: lesson,
+                    sectionTitle: section.title,
+                    courseTitle: course.title,
+                    courseSlug: course.slug
+                )
+                isOpeningLesson = false
+
+                if !started {
+                    route = LessonRoute(
+                        summary: lesson,
+                        autoPlay: true,
+                        courseSlug: course.slug,
+                        courseTitle: course.title,
+                        sectionTitle: section.title
+                    )
+                }
+            }
+            return
+        }
+
+        let unknownVideo = session.lessonHasVideo(lesson.id) == nil
         route = LessonRoute(
             summary: lesson,
-            autoPlay: autoPlay,
+            autoPlay: autoPlay || unknownVideo,
             courseSlug: course.slug,
             courseTitle: course.title,
             sectionTitle: section.title
@@ -343,6 +401,7 @@ struct CourseBrowserView: View {
             section.lessons.contains { $0.id == target.id }
         }) {
             selectedSectionID = section.id
+            sectionPositions[section.id] = target.id
         }
 
         carouselTarget = target.id

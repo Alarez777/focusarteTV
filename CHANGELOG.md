@@ -51,6 +51,10 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
 - Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, `TextField`/`SecureField` de SwiftUI con su apariencia nativa (sin fondo propio, tvOS ya dibuja el campo) y placeholders que el teclado muestra como subtítulo, versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va a Correo con `@FocusState`, sin abrir el teclado.
 - Login: la bajada ahora aclara que la app es un cliente **no oficial** de focusarte.com.
+- Lecciones con video: al seleccionarlas se abre el player directo, sin pasar por el post. Los posts de texto/PDF se siguen abriendo como antes.
+- Prefetch de miniaturas: una cola única que carga todo el curso en segundo plano (antes se cancelaba al cambiar el foco y solo cargaba el bloque).
+- Cada bloque recuerda la última lección enfocada; al volver se restaura en vez de saltar al inicio.
+- Tarjeta Up Next más a la derecha y más abajo (40 / 110).
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed
