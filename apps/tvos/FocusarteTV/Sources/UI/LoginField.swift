@@ -9,6 +9,8 @@ final class LoginFieldDiagnostics: ObservableObject {
     @Published fileprivate(set) var editChanges = 0
     @Published fileprivate(set) var insertions = 0
     @Published fileprivate(set) var lastInsertionLength = 0
+    @Published fileprivate(set) var lastSystemLength = 0
+    @Published fileprivate(set) var lastEditLength = 0
     @Published fileprivate(set) var activations = 0
 
     private init() {
@@ -18,6 +20,22 @@ final class LoginFieldDiagnostics: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in self?.activations += 1 }
+        }
+    }
+}
+
+/// `UITextField` que pide el foco en cuanto entra en la jerarquía de vistas.
+final class AutoFocusTextField: UITextField {
+    var autoFocus = false
+    private var requestedFocus = false
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard autoFocus, !requestedFocus, window != nil else { return }
+        requestedFocus = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            UIFocusSystem.focusSystem(for: self)?.requestFocusUpdate(to: self)
         }
     }
 }
@@ -39,7 +57,8 @@ struct LoginField: UIViewRepresentable {
     var autoFocus: Bool = false
 
     func makeUIView(context: Context) -> UITextField {
-        let field = UITextField()
+        let field = AutoFocusTextField()
+        field.autoFocus = autoFocus
         field.delegate = context.coordinator
         field.borderStyle = .none
         field.backgroundColor = .clear
@@ -68,14 +87,6 @@ struct LoginField: UIViewRepresentable {
             object: field
         )
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-        if autoFocus {
-            // Enfoca el campo sin entrar en edición (no abre el teclado).
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak field] in
-                guard let field, field.window != nil else { return }
-                UIFocusSystem.focusSystem(for: field)?.requestFocusUpdate(to: field)
-            }
-        }
         return field
     }
 
@@ -121,13 +132,17 @@ struct LoginField: UIViewRepresentable {
         }
 
         @objc func editingChanged(_ field: UITextField) {
-            LoginFieldDiagnostics.shared.editChanges += 1
+            let diagnostics = LoginFieldDiagnostics.shared
+            diagnostics.editChanges += 1
+            diagnostics.lastEditLength = field.text?.count ?? 0
             sync(field)
         }
 
         @objc func textDidChange(_ notification: Notification) {
-            LoginFieldDiagnostics.shared.systemChanges += 1
+            let diagnostics = LoginFieldDiagnostics.shared
+            diagnostics.systemChanges += 1
             guard let field = notification.object as? UITextField else { return }
+            diagnostics.lastSystemLength = field.text?.count ?? 0
             sync(field)
         }
 

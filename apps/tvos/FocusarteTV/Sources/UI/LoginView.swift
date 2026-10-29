@@ -35,7 +35,7 @@ struct LoginView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 26) {
-                fieldRow(title: "Usuario") {
+                fieldRow(title: "Correo") {
                     LoginField(
                         placeholder: "",
                         text: $email,
@@ -75,9 +75,12 @@ struct LoginView: View {
                 }
                 .padding(.top, 4)
 
-                Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · should=\(diagnostics.insertions) · last=\(diagnostics.lastInsertionLength) · activo=\(diagnostics.activations) · E=\(email.count) P=\(password.count)")
-                    .font(.system(size: 14, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AF · sistema=\(diagnostics.systemChanges) · edit=\(diagnostics.editChanges) · should=\(diagnostics.insertions) · last=\(diagnostics.lastInsertionLength)")
+                    Text("lenS=\(diagnostics.lastSystemLength) · lenE=\(diagnostics.lastEditLength) · activo=\(diagnostics.activations) · E=\"\(emailPreview)\" · P=\(password.count)")
+                }
+                .font(.system(size: 14, design: .monospaced))
+                .foregroundStyle(.secondary)
             }
             .frame(width: 720)
         }
@@ -97,8 +100,18 @@ struct LoginView: View {
                 .frame(width: 150, alignment: .leading)
 
             field()
+                .padding(.horizontal, 16)
                 .frame(height: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(white: 0.15))
+                )
         }
+    }
+
+    private var emailPreview: String {
+        guard !email.isEmpty else { return "" }
+        return email.count > 24 ? String(email.prefix(24)) + "…" : email
     }
 
     private func submit() {

@@ -49,12 +49,12 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 - Play/Pause del control remoto sobre una fila abre el video directamente.
 - "Reproducir" está en el header, a la derecha de "Vista"; la miniatura va arriba del título, centrada, y usa el `stillUrl` original de Kajabi.
 - Cerrar sesión ahora borra todo lo local: cookies, contraseña, email y preferencias de reproducción (el progreso de las lecciones lo guarda Kajabi).
-- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Usuario" y "Contraseña" a la izquierda, inputs de 44 pt con el foco nativo, versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va al campo Usuario sin abrir el teclado.
+- Login: wordmark de Focusarte a 225 pt centrado verticalmente, etiquetas "Correo" y "Contraseña" a la izquierda, inputs de 44 pt con fondo gris oscuro, versión de 14 pt abajo a la izquierda y botón "Iniciar sesión". El foco inicial va al campo Correo sin abrir el teclado.
 - AccentColor global en blanco: el teclado y los controles del sistema usan el tint nativo; el rojo de marca queda solo en `Theme.accent`.
 
 ### Fixed
 - AutoFill: `updateUIView` ya no reescribe el texto del campo (era lo que borraba la credencial insertada) y las inserciones en bloque (AutoFill/pegado) se aplican y sincronizan a mano.
-- Diagnóstico temporal en el login (contadores de `textDidChange`, `editingChanged` y activaciones) para saber si tvOS entrega o no el texto de AutoFill.
+- Diagnóstico temporal en el login: contadores de `textDidChange`, `editingChanged` y activaciones, largos en el instante del evento y el correo recibido, para saber si tvOS entrega o no el texto de AutoFill.
 - AutoFill desde el iPhone: el login usa `LoginField` (un `UITextField` con `textDidChange`) en vez de los campos de SwiftUI, que en tvOS no reflejaban el texto insertado por el gestor de contraseñas.
 - Keychain: los ítems ahora son `AfterFirstUnlockThisDeviceOnly` (no salen del dispositivo), se guardan sin sincronizar con iCloud Keychain, con update en lugar de delete+add y `OSStatus` verificado.
 - Cerrar sesión podía dejar cookies en Keychain si una escritura estaba en vuelo; ahora se invalida por generación de sesión.
