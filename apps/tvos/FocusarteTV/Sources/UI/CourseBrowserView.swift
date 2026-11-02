@@ -13,7 +13,6 @@ struct CourseBrowserView: View {
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
     @State private var autoFocusTarget: String?
-    @State private var sectionMemories: [String: LessonFocusMemory] = [:]
     @State private var focusRequest: FocusRequest?
     @State private var isOpeningLesson = false
     @FocusState private var focusedLesson: String?
@@ -60,7 +59,6 @@ struct CourseBrowserView: View {
         }
         .onChange(of: focusedLesson) { _, newValue in
             guard let newValue, let outline else { return }
-            sectionMemories[selectedSectionID] = LessonFocusMemory(lessonID: newValue)
             Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 guard focusedLesson == newValue else { return }
@@ -252,11 +250,11 @@ struct CourseBrowserView: View {
         )
     }
 
-    /// Posición recordada del bloque si es reciente; si no, la primera lección
-    /// sin completar (o la primera si ya está todo visto).
+    /// Primera lección sin completar del bloque; si ya está todo visto, la
+    /// primera de la izquierda.
     private func preferredLessonID(in sectionID: String, outline: CourseOutline) -> String {
         let lessons = outline.sections.first(where: { $0.id == sectionID })?.lessons ?? []
-        return LessonFocus.target(in: lessons, remembered: sectionMemories[sectionID]) ?? ""
+        return LessonFocus.target(in: lessons) ?? ""
     }
 
     /// Al apretar abajo desde el selector, manda el foco a la tarjeta elegida
@@ -444,7 +442,6 @@ struct CourseBrowserView: View {
             section.lessons.contains { $0.id == target.id }
         }) {
             selectedSectionID = section.id
-            sectionMemories[section.id] = LessonFocusMemory(lessonID: target.id)
         }
 
         carouselTarget = target.id
