@@ -6,6 +6,8 @@ struct LessonCard: View {
     let lesson: LessonSummary
     let posterURL: URL?
     var isFocused: Bool = false
+    /// Diagonal roja para videos que nunca se empezaron.
+    var showsUnwatchedBadge: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -15,6 +17,14 @@ struct LessonCard: View {
                         .fill(Color.white.opacity(0.08))
                 }
                 .frame(width: 360, height: 202)
+                .overlay(alignment: .topTrailing) {
+                    if showsUnwatchedBadge {
+                        CornerTriangle()
+                            .fill(Theme.accent)
+                            .frame(width: 56, height: 56)
+                            .accessibilityHidden(true)
+                    }
+                }
                 .overlay(alignment: .bottom) {
                     if !lesson.isCompleted, lesson.percentComplete > 0 {
                         GeometryReader { geometry in
@@ -57,6 +67,18 @@ struct LessonCard: View {
             .padding(.leading, 10)
         }
         .frame(width: 360, alignment: .leading)
+    }
+}
+
+/// Triángulo con el ángulo recto en la esquina superior derecha.
+private struct CornerTriangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.closeSubpath()
+        }
     }
 }
 
