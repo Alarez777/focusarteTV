@@ -37,7 +37,7 @@ struct LessonCard: View {
                 if showsUnwatchedBadge {
                     CornerTriangle()
                         .fill(Theme.accent)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 56, height: 56)
                         .accessibilityHidden(true)
                 }
 

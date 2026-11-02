@@ -13,9 +13,16 @@ struct CourseBrowserView: View {
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
     @State private var autoFocusTarget: String?
-    @State private var sectionPositions: [String: String] = [:]
+    @State private var sectionMemories: [String: LessonFocusMemory] = [:]
+    @State private var focusRequest: FocusRequest?
     @State private var isOpeningLesson = false
     @FocusState private var focusedLesson: String?
+
+    /// Pedido puntual de foco; el token permite repetirlo al mismo destino.
+    private struct FocusRequest: Equatable {
+        let token = UUID()
+        let lessonID: String
+    }
 
     var body: some View {
         NavigationStack {
@@ -53,7 +60,7 @@ struct CourseBrowserView: View {
         }
         .onChange(of: focusedLesson) { _, newValue in
             guard let newValue, let outline else { return }
-            sectionPositions[selectedSectionID] = newValue
+            sectionMemories[selectedSectionID] = LessonFocusMemory(lessonID: newValue)
             Task {
                 try? await Task.sleep(nanoseconds: 350_000_000)
                 guard focusedLesson == newValue else { return }
@@ -82,6 +89,10 @@ struct CourseBrowserView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+                .onMoveCommand { direction in
+                    guard direction == .down else { return }
+                    focusSelectedLesson(outline: outline)
+                }
 
                 if let section = selectedSection {
                     Text(section.title)
@@ -191,6 +202,22 @@ struct CourseBrowserView: View {
             .onChange(of: carouselTarget) { _, _ in
                 applyCarouselFocus(proxy)
             }
+            .onChange(of: focusRequest) { _, request in
+                guard let request else { return }
+                focusInCarousel(proxy, target: request.lessonID)
+            }
+        }
+    }
+
+    /// Ancla el foco en la tarjeta elegida, esté donde esté dentro del carrusel.
+    private func focusInCarousel(_ proxy: ScrollViewProxy, target: String) {
+        Task { @MainActor in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(target, anchor: .center)
+            }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            focusedLesson = target
+            focusRequest = nil
         }
     }
 
@@ -230,16 +257,20 @@ struct CourseBrowserView: View {
         )
     }
 
-    /// Última lección vista en el bloque; si nunca se visitó, la primera.
+    /// Posición recordada del bloque si es reciente; si no, la primera lección
+    /// sin completar (o la primera si ya está todo visto).
     private func preferredLessonID(in sectionID: String, outline: CourseOutline) -> String {
         let lessons = outline.sections.first(where: { $0.id == sectionID })?.lessons ?? []
+        return LessonFocus.target(in: lessons, remembered: sectionMemories[sectionID]) ?? ""
+    }
 
-        if let remembered = sectionPositions[sectionID],
-           lessons.contains(where: { $0.id == remembered }) {
-            return remembered
-        }
-
-        return lessons.first?.id ?? ""
+    /// Al apretar abajo desde el selector, manda el foco a la tarjeta elegida
+    /// sin depender de la geometría del motor de foco.
+    private func focusSelectedLesson(outline: CourseOutline) {
+        let target = preferredLessonID(in: selectedSectionID, outline: outline)
+        guard !target.isEmpty else { return }
+        carouselTarget = target
+        focusRequest = FocusRequest(lessonID: target)
     }
 
     private func shortLabel(_ section: CourseSection) -> String {
@@ -419,7 +450,7 @@ struct CourseBrowserView: View {
             section.lessons.contains { $0.id == target.id }
         }) {
             selectedSectionID = section.id
-            sectionPositions[section.id] = target.id
+            sectionMemories[section.id] = LessonFocusMemory(lessonID: target.id)
         }
 
         carouselTarget = target.id
