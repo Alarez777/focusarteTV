@@ -15,9 +15,6 @@ final class SessionStore: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var signedInEmail = ""
     @Published var errorMessage: String?
-    /// Cambia cuando el prefetch descubre si una lección tiene video, para que
-    /// el carrusel repinte los badges de "sin ver".
-    @Published private(set) var videoFlagsRevision = 0
 
     let client: KajabiClient
 
@@ -152,7 +149,7 @@ final class SessionStore: ObservableObject {
 
             await withTaskGroup(of: (String, Lesson?).self) { group in
                 for lesson in batch {
-                    guard posterCache[lesson.id] == nil || lessonVideo[lesson.id] == nil,
+                    guard posterCache[lesson.id] == nil,
                           !posterTasks.contains(lesson.id) else { continue }
 
                     posterTasks.insert(lesson.id)
@@ -167,11 +164,7 @@ final class SessionStore: ObservableObject {
                             posterCache[id] = url
                             persistPosterCache()
                         }
-                        let hasVideo = loaded.video != nil
-                        if lessonVideo[id] != hasVideo {
-                            lessonVideo[id] = hasVideo
-                            videoFlagsRevision += 1
-                        }
+                        lessonVideo[id] = loaded.video != nil
                         if let video = loaded.video {
                             playbackInfo[id] = PlaybackInfo(
                                 mediaID: video.mediaID,
@@ -237,11 +230,7 @@ final class SessionStore: ObservableObject {
             return nil
         }
 
-        let hasVideo = lesson.video != nil
-        if lessonVideo[summary.id] != hasVideo {
-            lessonVideo[summary.id] = hasVideo
-            videoFlagsRevision += 1
-        }
+        lessonVideo[summary.id] = lesson.video != nil
         guard let video = lesson.video else { return nil }
 
         let info = PlaybackInfo(

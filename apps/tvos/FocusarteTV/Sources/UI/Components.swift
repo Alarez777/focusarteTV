@@ -6,7 +6,7 @@ struct LessonCard: View {
     let lesson: LessonSummary
     let posterURL: URL?
     var isFocused: Bool = false
-    /// Diagonal roja para videos que nunca se empezaron.
+    /// Diagonal roja para lecciones que nunca se empezaron.
     var showsUnwatchedBadge: Bool = false
 
     var body: some View {
@@ -37,7 +37,7 @@ struct LessonCard: View {
                 if showsUnwatchedBadge {
                     CornerTriangle()
                         .fill(Theme.accent)
-                        .frame(width: 72, height: 72)
+                        .frame(width: 36, height: 36)
                         .accessibilityHidden(true)
                 }
 

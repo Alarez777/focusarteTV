@@ -7,7 +7,7 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 ## [Unreleased]
 
 ### Added
-- Diagonal roja en la esquina de la miniatura de los videos que todavía no se empezaron.
+- Diagonal roja en la esquina de la miniatura de las lecciones que todavía no se empezaron.
 
 ## [1.0.0] - 2026-10-29
 

@@ -171,7 +171,6 @@ struct CourseBrowserView: View {
                                 posterURL: session.lessonPosterURL(for: lesson.id) ?? course.imageURL,
                                 isFocused: focusedLesson == lesson.id,
                                 showsUnwatchedBadge: lesson.isUnwatched
-                                    && session.lessonHasVideo(lesson.id) != false
                             )
                         }
                         .buttonStyle(.card)

@@ -39,7 +39,6 @@ public struct LessonSummary: Identifiable, Hashable, Sendable {
     public var isCompleted: Bool { percentComplete >= 100 }
 
     /// Todavía no se empezó: sin progreso y sin completar.
-    /// El llamador decide si aplica (por ejemplo, solo a lecciones con video).
     public var isUnwatched: Bool { !isCompleted && percentComplete <= 0 }
 
     public init(id: String, title: String, path: String, percentComplete: Int) {
