@@ -209,16 +209,11 @@ struct CourseBrowserView: View {
         }
     }
 
-    /// Ancla el foco en la tarjeta elegida, esté donde esté dentro del carrusel.
+    /// Ancla el foco en la tarjeta elegida sin animar el desplazamiento.
     private func focusInCarousel(_ proxy: ScrollViewProxy, target: String) {
-        Task { @MainActor in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                proxy.scrollTo(target, anchor: .center)
-            }
-            try? await Task.sleep(nanoseconds: 150_000_000)
-            focusedLesson = target
-            focusRequest = nil
-        }
+        proxy.scrollTo(target, anchor: .center)
+        focusedLesson = target
+        focusRequest = nil
     }
 
     /// Scroll a la tarjeta y, si corresponde, recién ahí mover el foco.
@@ -269,7 +264,6 @@ struct CourseBrowserView: View {
     private func focusSelectedLesson(outline: CourseOutline) {
         let target = preferredLessonID(in: selectedSectionID, outline: outline)
         guard !target.isEmpty else { return }
-        carouselTarget = target
         focusRequest = FocusRequest(lessonID: target)
     }
 
