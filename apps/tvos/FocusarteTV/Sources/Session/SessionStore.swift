@@ -152,7 +152,7 @@ final class SessionStore: ObservableObject {
 
             await withTaskGroup(of: (String, Lesson?).self) { group in
                 for lesson in batch {
-                    guard posterCache[lesson.id] == nil,
+                    guard posterCache[lesson.id] == nil || lessonVideo[lesson.id] == nil,
                           !posterTasks.contains(lesson.id) else { continue }
 
                     posterTasks.insert(lesson.id)

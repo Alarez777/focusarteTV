@@ -17,14 +17,6 @@ struct LessonCard: View {
                         .fill(Color.white.opacity(0.08))
                 }
                 .frame(width: 360, height: 202)
-                .overlay(alignment: .topTrailing) {
-                    if showsUnwatchedBadge {
-                        CornerTriangle()
-                            .fill(Theme.accent)
-                            .frame(width: 56, height: 56)
-                            .accessibilityHidden(true)
-                    }
-                }
                 .overlay(alignment: .bottom) {
                     if !lesson.isCompleted, lesson.percentComplete > 0 {
                         GeometryReader { geometry in
@@ -41,8 +33,13 @@ struct LessonCard: View {
                         .frame(height: 9)
                     }
                 }
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                if showsUnwatchedBadge {
+                    CornerTriangle()
+                        .fill(Theme.accent)
+                        .frame(width: 72, height: 72)
+                        .accessibilityHidden(true)
+                }
 
                 if lesson.isCompleted {
                     ZStack {
@@ -56,6 +53,8 @@ struct LessonCard: View {
                     .padding(10)
                 }
             }
+            .frame(width: 360, height: 202)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             MarqueeText(
                 text: lesson.title,
