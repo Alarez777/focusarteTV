@@ -6,8 +6,16 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-04
+
 ### Added
 - Diagonal roja en la esquina de la miniatura de las lecciones que todavía no se empezaron.
+
+### Changed
+- Al entrar a un bloque, el foco cae siempre en la primera lección sin completar (en curso o sin empezar); si el bloque ya está todo visto, en la primera.
+
+### Fixed
+- El foco al bajar desde el selector ya no anima ni desplaza el carrusel.
 
 ## [1.0.0] - 2026-10-29
 

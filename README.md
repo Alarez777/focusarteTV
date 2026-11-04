@@ -7,6 +7,11 @@
 Cliente nativo de tvOS para [Focusarte](https://www.focusarte.com) (Historia del Arte
 Clásico).
 
+<p align="center">
+  <img src="docs/images/focusarte.png" width="900"
+       alt="FocusarteTV con el curso Historia del Arte Clásico, el selector de bloques y las miniaturas con diagonal roja en las lecciones no empezadas">
+</p>
+
 La web de Focusarte corre sobre **Kajabi** y es server-rendered. La app no usa un backend
 propio: habla HTTP directamente contra el sitio con la sesión del miembro, parsea el HTML,
 resuelve los videos de Wistia a HLS y reporta el progreso a los endpoints de Kajabi.
@@ -18,7 +23,7 @@ App funcional, en desarrollo activo:
 - Login contra focusarte.com con Keychain y re-login silencioso.
 - Biblioteca con una pestaña por curso: bloques, carrusel de lecciones y progreso.
 - Reproducción HLS a pantalla completa con PiP, autoplay y tarjeta Up Next.
-- Foco que sigue la lección actual y recuerda la posición de cada bloque.
+- Foco que sigue la lección actual y, al entrar a un bloque, cae en la primera lección sin completar.
 - Visor de PDFs a pantalla completa para las descargas de cada lección (Core Graphics,
   sin PDFKit): se abre desde el botón de descarga y Menú vuelve al post.
 - Cache de imágenes y precarga de miniaturas de todo el curso en segundo plano.

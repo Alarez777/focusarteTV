@@ -13,15 +13,8 @@ struct CourseBrowserView: View {
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
     @State private var autoFocusTarget: String?
-    @State private var focusRequest: FocusRequest?
     @State private var isOpeningLesson = false
     @FocusState private var focusedLesson: String?
-
-    /// Pedido puntual de foco; el token permite repetirlo al mismo destino.
-    private struct FocusRequest: Equatable {
-        let token = UUID()
-        let lessonID: String
-    }
 
     var body: some View {
         NavigationStack {
@@ -200,18 +193,7 @@ struct CourseBrowserView: View {
             .onChange(of: carouselTarget) { _, _ in
                 applyCarouselFocus(proxy)
             }
-            .onChange(of: focusRequest) { _, request in
-                guard let request else { return }
-                focusInCarousel(proxy, target: request.lessonID)
-            }
         }
-    }
-
-    /// Ancla el foco en la tarjeta elegida sin animar el desplazamiento.
-    private func focusInCarousel(_ proxy: ScrollViewProxy, target: String) {
-        proxy.scrollTo(target, anchor: .center)
-        focusedLesson = target
-        focusRequest = nil
     }
 
     /// Scroll a la tarjeta y, si corresponde, recién ahí mover el foco.
@@ -258,11 +240,11 @@ struct CourseBrowserView: View {
     }
 
     /// Al apretar abajo desde el selector, manda el foco a la tarjeta elegida
-    /// sin depender de la geometría del motor de foco.
+    /// sin reposicionar el carrusel: el foco aparece en el lugar.
     private func focusSelectedLesson(outline: CourseOutline) {
         let target = preferredLessonID(in: selectedSectionID, outline: outline)
         guard !target.isEmpty else { return }
-        focusRequest = FocusRequest(lessonID: target)
+        focusedLesson = target
     }
 
     private func shortLabel(_ section: CourseSection) -> String {
