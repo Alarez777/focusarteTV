@@ -4,6 +4,10 @@
 > Focusarte ni por Kajabi. Es un cliente independiente hecho para uso personal.
 > “Focusarte”, su contenido y sus marcas pertenecen a sus respectivos dueños.
 
+> **Se necesita una cuenta.** La app no incluye ni desbloquea contenido: es solo un cliente
+> que facilita ver el contenido que ya se adquirió en Focusarte. Para usarla hace falta una
+> cuenta activa con el curso comprado.
+
 Cliente nativo de tvOS para [Focusarte](https://www.focusarte.com) (Historia del Arte
 Clásico).
 
@@ -48,7 +52,7 @@ App funcional, en desarrollo activo:
 El `.ipa` sin firmar se descarga desde la página de
 [releases](../../releases) del repositorio.
 
-Si querés compilarlo vos, el workflow
+Para compilarlo manualmente, el workflow
 [`tvos-ipa.yml`](.github/workflows/tvos-ipa.yml) sirve de guía: instala XcodeGen, genera el
 proyecto desde `apps/tvos/project.yml`, archiva con `xcodebuild` y empaqueta el `.ipa` sin
 firmar.
