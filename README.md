@@ -43,42 +43,23 @@ App funcional, en desarrollo activo:
 - No hace falta Mac para compilar: el `.ipa` se genera en GitHub Actions
 - Para probar el núcleo en local: Docker (`swift:6.2`)
 
-## Compilar
+## Instalar
 
-El proyecto Xcode **no se versiona**: `apps/tvos/project.yml` es la fuente de verdad y
-XcodeGen genera el proyecto.
+El `.ipa` sin firmar se descarga desde la página de
+[releases](../../releases) del repositorio.
 
-En CI, cada push a `develop` compila y publica un `.ipa` sin firmar. En local, si tenés un
-Mac:
+Si querés compilarlo vos, el workflow
+[`tvos-ipa.yml`](.github/workflows/tvos-ipa.yml) sirve de guía: instala XcodeGen, genera el
+proyecto desde `apps/tvos/project.yml`, archiva con `xcodebuild` y empaqueta el `.ipa` sin
+firmar.
 
-```bash
-cd apps/tvos
-xcodegen generate
-xcodebuild -project FocusarteTV.xcodeproj -scheme FocusarteTV \
-  -configuration Release -destination 'generic/platform=tvOS' \
-  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive \
-  -archivePath build/FocusarteTV.xcarchive
-```
+## Tests
 
-Los tests del núcleo corren sin Mac:
+El núcleo corre sin Mac ni tvOS:
 
 ```bash
 docker run --rm -v "$PWD/apps/tvos/FocusarteCore:/pkg" -w /pkg swift:6.2 swift test
 ```
-
-## Obtener el IPA
-
-Cada push a `develop` compila un `.ipa` sin firmar y lo publica como artifact.
-Para bajarlo a la carpeta de sideloading:
-
-```bash
-./scripts/fetch-ipa.sh          # último build exitoso de develop
-./scripts/fetch-ipa.sh main     # último build exitoso de main
-```
-
-También acepta un tag (`./scripts/fetch-ipa.sh v0.1.0`).
-
-Destino por defecto: `~/Descargas/ABDM/Movil` (override con `FOCUSARTE_IPA_DIR`).
 
 ## Documentación
 
