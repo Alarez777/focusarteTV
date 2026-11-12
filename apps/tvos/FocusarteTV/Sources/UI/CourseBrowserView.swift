@@ -13,6 +13,7 @@ struct CourseBrowserView: View {
     @State private var selectedSectionID: String = ""
     @State private var carouselTarget: String?
     @State private var autoFocusTarget: String?
+    @State private var markedLessonID: String?
     @State private var isOpeningLesson = false
     @FocusState private var focusedLesson: String?
 
@@ -31,7 +32,9 @@ struct CourseBrowserView: View {
                 }
             }
             .navigationDestination(item: $route) { route in
-                LessonView(route: route)
+                LessonView(route: route) { lessonID in
+                    markedLessonID = lessonID
+                }
             }
             .overlay {
                 if isOpeningLesson {
@@ -403,7 +406,16 @@ struct CourseBrowserView: View {
 
     private func afterReturn() async {
         await refresh()
-        configureFocus(preferring: playback.currentLessonKey)
+
+        let preferred: String?
+        if let markedLessonID, let outline {
+            preferred = LessonFocus.next(after: markedLessonID, in: outline.allLessons) ?? markedLessonID
+        } else {
+            preferred = playback.currentLessonKey
+        }
+
+        markedLessonID = nil
+        configureFocus(preferring: preferred)
     }
 
     @MainActor

@@ -93,6 +93,12 @@ public struct LessonDownload: Identifiable, Hashable, Sendable {
 
     public var id: String { path }
 
+    /// Heurística para los adjuntos de Focusarte: el PDF suele llevar "pdf"
+    /// en el título o en la ruta (`…/nombre-pdf`).
+    public var isLikelyPDF: Bool {
+        title.lowercased().contains("pdf") || path.lowercased().contains("pdf")
+    }
+
     public init(title: String, path: String) {
         self.title = title
         self.path = path

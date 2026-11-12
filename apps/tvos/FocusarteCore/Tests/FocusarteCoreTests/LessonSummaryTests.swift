@@ -28,4 +28,16 @@ final class LessonSummaryTests: XCTestCase {
         XCTAssertTrue(summary.isCompleted)
         XCTAssertFalse(summary.isUnwatched)
     }
+
+    func testDownloadLooksLikePDFFromTitleOrPath() {
+        XCTAssertTrue(
+            LessonDownload(title: "Obras del Barroco - PDF", path: "/courses/downloads/1/obras").isLikelyPDF
+        )
+        XCTAssertTrue(
+            LessonDownload(title: "Obras del Barroco", path: "/courses/downloads/1/obras-barroco-pdf").isLikelyPDF
+        )
+        XCTAssertFalse(
+            LessonDownload(title: "Obras del Barroco", path: "/courses/downloads/1/obras-barroco").isLikelyPDF
+        )
+    }
 }

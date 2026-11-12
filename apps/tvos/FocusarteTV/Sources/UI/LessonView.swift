@@ -3,8 +3,10 @@ import FocusarteCore
 
 struct LessonView: View {
     let route: LessonRoute
+    let onMarkedViewed: ((String) -> Void)?
 
     @EnvironmentObject private var session: SessionStore
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var playback = PlaybackManager.shared
 
     @State private var displayedSummary: LessonSummary
@@ -15,12 +17,17 @@ struct LessonView: View {
     @State private var isUpdating = false
     @State private var errorMessage: String?
     @State private var presentedDownload: LessonDownload?
+    /// Solo devolver el foco al encabezado si el PDF se abrió desde ahí;
+    /// los links de Descargas del final no deben arrastrar la vista arriba.
+    @State private var restorePDFFocus = false
     @FocusState private var playButtonFocused: Bool
+    @FocusState private var pdfButtonFocused: Bool
 
     private let baseURL = URL(string: "https://www.focusarte.com")!
 
-    init(route: LessonRoute) {
+    init(route: LessonRoute, onMarkedViewed: ((String) -> Void)? = nil) {
         self.route = route
+        self.onMarkedViewed = onMarkedViewed
         _displayedSummary = State(initialValue: route.summary)
     }
 
@@ -58,6 +65,14 @@ struct LessonView: View {
                 playButtonFocused = true
             }
         }
+        .onChange(of: presentedDownload) { _, newValue in
+            guard newValue == nil, restorePDFFocus, pdfDownload != nil else { return }
+            restorePDFFocus = false
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                pdfButtonFocused = true
+            }
+        }
     }
 
     // MARK: - Miniatura
@@ -84,6 +99,17 @@ struct LessonView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 0)
+
+            if let pdfDownload {
+                Button {
+                    restorePDFFocus = true
+                    presentedDownload = pdfDownload
+                } label: {
+                    Label("Ver PDF", systemImage: "doc.text")
+                        .font(.system(size: 22, weight: .semibold))
+                }
+                .focused($pdfButtonFocused)
+            }
 
             Button {
                 toggleCompleted()
@@ -117,6 +143,7 @@ struct LessonView: View {
 
                 ForEach(lesson.downloads) { download in
                     Button {
+                        restorePDFFocus = false
                         presentedDownload = download
                     } label: {
                         HStack(spacing: 14) {
@@ -134,6 +161,18 @@ struct LessonView: View {
     }
 
     // MARK: - Datos
+
+    /// PDF del encabezado: solo para posts sin video. Si ninguna descarga
+    /// parece PDF, se usa la primera para no dejar sin acceso al visor.
+    private var pdfDownload: LessonDownload? {
+        guard let lesson else { return nil }
+        return primaryPDFDownload(in: lesson)
+    }
+
+    private func primaryPDFDownload(in lesson: Lesson) -> LessonDownload? {
+        guard lesson.video == nil else { return nil }
+        return lesson.downloads.first(where: { $0.isLikelyPDF }) ?? lesson.downloads.first
+    }
 
     /// Cuando el player auto-avanza, esta pantalla sigue a la lección que suena.
     private func followPlayback(_ key: String?) {
@@ -167,6 +206,9 @@ struct LessonView: View {
             if videoAsset != nil {
                 try? await Task.sleep(nanoseconds: 150_000_000)
                 playButtonFocused = true
+            } else if primaryPDFDownload(in: loaded) != nil {
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                pdfButtonFocused = true
             }
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -202,12 +244,19 @@ struct LessonView: View {
 
     private func toggleCompleted() {
         guard let lesson else { return }
+        let willComplete = !isCompleted
+        let shouldReturn = willComplete && lesson.video == nil
         isUpdating = true
 
         Task { @MainActor in
             do {
-                try await session.client.setCompleted(!isCompleted, token: lesson.progressToken)
-                isCompleted.toggle()
+                try await session.client.setCompleted(willComplete, token: lesson.progressToken)
+                isCompleted = willComplete
+
+                if shouldReturn {
+                    onMarkedViewed?(lesson.id)
+                    dismiss()
+                }
             } catch {
                 errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
             }
