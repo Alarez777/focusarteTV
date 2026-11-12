@@ -50,11 +50,8 @@ struct CourseBrowserView: View {
             Task { await refresh() }
         }
         .onChange(of: route?.summary.id) { _, newValue in
-            guard let newValue else {
-                Task { await afterReturn() }
-                return
-            }
-            PlaybackPreferences.shared.remember(courseSlug: course.slug, lessonID: newValue)
+            guard newValue == nil else { return }
+            Task { await afterReturn() }
         }
         .onChange(of: focusedLesson) { _, newValue in
             guard let newValue, let outline else { return }
@@ -373,16 +370,10 @@ struct CourseBrowserView: View {
 
     // MARK: - Carga y foco
 
-    private func initialFocusKey() -> String? {
-        let preferences = PlaybackPreferences.shared
-        guard preferences.lastCourseSlug == course.slug else { return nil }
-        return preferences.lastLessonID
-    }
-
     private func loadWithCache() async {
         if let cached = session.cachedOutline(for: course.slug) {
             outline = cached
-            configureFocus(preferring: initialFocusKey())
+            configureFocus()
         }
         await refresh()
     }
@@ -398,7 +389,7 @@ struct CourseBrowserView: View {
             }
             outline = fresh
             if !hadOutline {
-                configureFocus(preferring: initialFocusKey())
+                configureFocus()
             }
         } catch {
             if outline == nil {

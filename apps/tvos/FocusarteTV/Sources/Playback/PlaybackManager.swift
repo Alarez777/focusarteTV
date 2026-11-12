@@ -178,7 +178,7 @@ final class PlaybackManager: ObservableObject {
         ended = false
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = metadata.nowPlayingInfo(duration: duration)
-        PlaybackPreferences.shared.remember(courseSlug: courseSlug, lessonID: key)
+        PlaybackPreferences.shared.remember(courseSlug: courseSlug)
         host.play()
     }
 

@@ -27,6 +27,10 @@ struct MainTabView: View {
             .onChange(of: session.courses.count) { _, _ in
                 selectInitialTab()
             }
+            .onChange(of: selection) { _, newValue in
+                guard !newValue.isEmpty, newValue != "settings" else { return }
+                preferences.remember(courseSlug: newValue)
+            }
 
             Image("FocusarteWordmark")
                 .resizable()
