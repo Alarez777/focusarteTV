@@ -12,6 +12,9 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 ### Changed
 - Al marcar como vista una lección sin video, la app vuelve al curso y enfoca la lección siguiente (o la primera del bloque siguiente).
 
+### Fixed
+- Al reabrir la app, el foco vuelve también al último post abierto (incluidos los PDF), no solo al último video reproducido.
+
 ## [1.1.0] - 2026-11-04
 
 ### Added

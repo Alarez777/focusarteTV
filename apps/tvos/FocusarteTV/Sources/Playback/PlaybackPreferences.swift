@@ -16,7 +16,8 @@ final class PlaybackPreferences: ObservableObject {
         }
     }
 
-    /// Último video reproducido, para abrir la app en su pestaña/bloque/capítulo.
+    /// Última lección abierta o reproducida, para abrir la app en su
+    /// pestaña/bloque/capítulo.
     private(set) var lastCourseSlug: String?
     private(set) var lastLessonID: String?
 

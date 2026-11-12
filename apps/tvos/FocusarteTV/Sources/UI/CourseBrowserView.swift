@@ -50,8 +50,11 @@ struct CourseBrowserView: View {
             Task { await refresh() }
         }
         .onChange(of: route?.summary.id) { _, newValue in
-            guard newValue == nil else { return }
-            Task { await afterReturn() }
+            guard let newValue else {
+                Task { await afterReturn() }
+                return
+            }
+            PlaybackPreferences.shared.remember(courseSlug: course.slug, lessonID: newValue)
         }
         .onChange(of: focusedLesson) { _, newValue in
             guard let newValue, let outline else { return }
