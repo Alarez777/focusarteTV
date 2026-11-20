@@ -6,6 +6,8 @@ Todas las versiones notables de FocusarteTV. Formato basado en
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-20
+
 ### Added
 - Botón «Ver PDF» junto a «Marcar como vista» en los posts sin video, con foco automático al abrirlos.
 
